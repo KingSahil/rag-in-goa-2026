@@ -1,0 +1,12 @@
+fastapi>=0.116
+uvicorn[standard]>=0.35
+httpx>=0.28
+pydantic>=2.11
+python-dotenv>=1.1
+numpy>=2.2
+faiss-cpu>=1.10
+sentence-transformers>=5.1
+datasets>=4.0
+rank-bm25>=0.2.2
+orjson>=3.11
+python-multipart>=0.0.20

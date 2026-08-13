@@ -1,0 +1,18 @@
+[
+  {
+    "query": "भारत की राजधानी क्या है?",
+    "language": "hi"
+  },
+  {
+    "query": "ਪੰਜਾਬ ਦੀ ਰਾਜਧਾਨੀ ਕੀ ਹੈ?",
+    "language": "pa"
+  },
+  {
+    "query": "भारत में सबसे लंबी नदी कौन सी है?",
+    "language": "hi"
+  },
+  {
+    "query": "What is the capital of India?",
+    "language": "en"
+  }
+]
