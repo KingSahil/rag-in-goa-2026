@@ -11,41 +11,41 @@ Featuring **Cross-Lingual Multilingual Federation**, **Structured Orchestration 
 ```mermaid
 flowchart TD
     subgraph INGRESS ["1. Ingress & STT Stage"]
-        MIC[Browser Mic / Web Audio] -->|Audio Stream| STT[Sarvam Saaras v3 STT\n16kHz Mono Normalization]
-        TXT[Text Bypass Query] --> DISPATCH[Language Detection & Routing]
+        MIC["Browser Mic / Web Audio"] -->|Audio Stream| STT["Sarvam Saaras v3 STT<br/>16kHz Mono Normalization"]
+        TXT["Text Bypass Query"] --> DISPATCH["Language Detection & Routing"]
         STT --> DISPATCH
     end
 
     subgraph GUARD1 ["2. Pre-Retrieval Guardrail Tier"]
-        DISPATCH --> RGX[Fast-Path Safety Regex\nHate, Violence, Self-Harm]
-        RGX -->|Pass| INJ[Prompt Injection Defense\nJailbreak & Exfiltration Block]
-        INJ -->|Pass| CENT[Centroid Topic Gatekeeper\nCosine Distance to Language Centroid <= 0.18]
-        CENT -->|Off-Topic / Blocked| REF1[Deterministic Declination]
+        DISPATCH --> RGX["Fast-Path Safety Regex<br/>Hate, Violence, Self-Harm"]
+        RGX -->|Pass| INJ["Prompt Injection Defense<br/>Jailbreak & Exfiltration Block"]
+        INJ -->|Pass| CENT["Centroid Topic Gatekeeper<br/>Cosine Distance <= 0.18"]
+        CENT -->|Off-Topic / Blocked| REF1["Deterministic Declination"]
     end
 
-    subgraph RETRIEVAL ["3. Hybrid Multi-Strategy Retrieval Stage (<40ms)"]
-        CENT -->|Pass| EMB[Query Embedding\nintfloat/multilingual-e5-small]
-        EMB --> FAISS1[(FAISS HNSW Index\nPassage-Native 7,500 vectors)]
-        EMB --> FAISS2[(FAISS HNSW Index\nSemantic-Longdoc 370 vectors)]
-        FAISS1 & FAISS2 --> RRF[Reciprocal Rank Fusion RRF k=60\nScore Aggregation & Deduplication]
-        RRF --> BM25[Adaptive Script-Aware BM25\nMonolingual Entity Boost]
-        BM25 --> CE[Cross-Encoder Re-Ranking\nms-marco-MiniLM-L-6-v2 (<25ms CPU)]
-        CE -->|Score < -0.5| REF2[Calibrated Disqualification Filter]
+    subgraph RETRIEVAL ["3. Hybrid Multi-Strategy Retrieval Stage (&lt;40ms)"]
+        CENT -->|Pass| EMB["Query Embedding<br/>intfloat/multilingual-e5-small"]
+        EMB --> FAISS1[("FAISS HNSW Index<br/>Passage-Native 7,500 vectors")]
+        EMB --> FAISS2[("FAISS HNSW Index<br/>Semantic-Longdoc 370 vectors")]
+        FAISS1 & FAISS2 --> RRF["Reciprocal Rank Fusion RRF k=60<br/>Score Aggregation & Deduplication"]
+        RRF --> BM25["Adaptive Script-Aware BM25<br/>Monolingual Entity Boost"]
+        BM25 --> CE["Cross-Encoder Re-Ranking<br/>ms-marco-MiniLM-L-6-v2 (&lt;25ms CPU)"]
+        CE -->|Score &lt; -0.5| REF2["Calibrated Disqualification Filter"]
     end
 
-    subgraph SYNTHESIS ["4. Deterministic Non-LLM Synthesis Stage (<10ms)"]
-        CE -->|Top-3 Grounded Chunks| TR[Continuous TextRank Graph Centrality\nPower Iteration Cosine Adjacency]
-        TR --> SVD[Economy SVD Cumulative Energy Filtering\n>=95% Principal Component Variance]
-        SVD --> EXT[Grammatically Sequenced Extract]
+    subgraph SYNTHESIS ["4. Deterministic Non-LLM Synthesis Stage (&lt;10ms)"]
+        CE -->|Top-3 Grounded Chunks| TR["Continuous TextRank Graph Centrality<br/>Power Iteration Cosine Adjacency"]
+        TR --> SVD["Economy SVD Cumulative Energy Filtering<br/>&ge;95% Principal Component Variance"]
+        SVD --> EXT["Grammatically Sequenced Extract"]
         EXT -->|Offline Fast-Path| POSTG
-        EXT -->|LLM Mode Active| LLM[Multi-Tier LLM Fallback\nGroq 70B / Cerebras 120B / OpenAI]
+        EXT -->|LLM Mode Active| LLM["Multi-Tier LLM Fallback<br/>Groq 70B / Cerebras 120B / OpenAI"]
         LLM --> POSTG
     end
 
     subgraph GUARD2 ["5. Post-Generation Grounding Tier"]
-        POSTG[Lexical & Semantic Overlap Gate\nThreshold >= 0.30 Containment]
-        POSTG -->|Grounded| RES[Structured QueryResponse\n+ Full StageTiming Latency Waterfall]
-        POSTG -->|Ungrounded| REF3[Grounded Answer Refusal Template]
+        POSTG["Lexical & Semantic Overlap Gate<br/>Threshold &ge; 0.30 Containment"]
+        POSTG -->|Grounded| RES["Structured QueryResponse<br/>+ Full StageTiming Latency Waterfall"]
+        POSTG -->|Ungrounded| REF3["Grounded Answer Refusal Template"]
     end
 ```
 
