@@ -57,7 +57,7 @@ class RAGPipelineOrchestrator:
         guardrails = GuardrailFlags()
         
         raw_query_text = ""
-        language = request.language_hint or "hi"
+        language = request.language_hint or "auto"
         transcript = ""
         
         # -------------------------------------------------------------

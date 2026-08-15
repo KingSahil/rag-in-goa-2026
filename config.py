@@ -102,7 +102,7 @@ CROSS_ENCODER_LOCAL_CACHE = (
     else None
 )
 CROSS_ENCODER_TOP_K = 3
-CROSS_ENCODER_THRESHOLD = float(os.getenv("CROSS_ENCODER_THRESHOLD", "-0.5"))
+CROSS_ENCODER_THRESHOLD = float(os.getenv("CROSS_ENCODER_THRESHOLD", "-2.0"))
 
 
 # ==========================================
@@ -125,10 +125,10 @@ SARVAM_STT_MAX_RETRIES = 1
 # 6. GUARDRAIL THRESHOLDS
 # ==========================================
 # Pre-retrieval off-topic cosine distance threshold from nearest corpus centroid
-OFF_TOPIC_DISTANCE_THRESHOLD = 0.18  # Calibrated for multilingual-e5-small normalized embeddings (1 - cosine_similarity)
+OFF_TOPIC_DISTANCE_THRESHOLD = float(os.getenv("OFF_TOPIC_DISTANCE_THRESHOLD", "0.22"))
 
 # Post-retrieval confidence threshold (calibrated composite dense & lexical match score)
-MIN_CONFIDENT_MATCH_SCORE = 0.75  # Empirically calibrated: declines all 10 off-topic queries (<=0.7257) while passing all 45 in-scope queries (>=0.7825)
+MIN_CONFIDENT_MATCH_SCORE = float(os.getenv("MIN_CONFIDENT_MATCH_SCORE", "0.70"))
 
 
 
