@@ -1,0 +1,192 @@
+"""
+Provider-Agnostic LLM Fallback Adapter.
+
+Interface: `generate(prompt: str, context: str) -> str`
+Reads API key, base URL, and model name from environment variables (config.py).
+Swappable with OpenAI, Groq, Ollama, vLLM, Together AI, or any OpenAI-compatible endpoint.
+"""
+
+import json
+import logging
+import os
+import urllib.request
+import urllib.error
+from typing import Optional
+import config
+
+logger = logging.getLogger(__name__)
+
+
+class LLMAdapter:
+    """
+    Provider-agnostic HTTP adapter for LLM generation.
+    Uses standard library urllib / json to avoid heavy framework dependencies.
+    """
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+        timeout: float = config.LLM_TIMEOUT_SECONDS,
+    ):
+        self.api_key = api_key or config.LLM_API_KEY
+        self.base_url = (base_url or config.LLM_BASE_URL).rstrip("/")
+        self.model = model or config.LLM_MODEL
+        self.timeout = timeout
+
+    def _call_chat_endpoint(
+        self,
+        base_url: str,
+        api_key: str,
+        model: str,
+        prompt: str,
+        context: str,
+        target_lang: Optional[str] = None,
+        timeout: float = 12.0,
+    ) -> Optional[str]:
+        """Helper to invoke any OpenAI-compatible chat completion endpoint."""
+        if not api_key or not api_key.strip():
+            return None
+            
+        lang_instruction = f"Respond in '{target_lang}'." if target_lang else "Respond in the same language as the user query."
+        
+        system_prompt = (
+            "You are an expert multilingual, cross-lingual RAG intelligence system. "
+            "You are provided with context passages retrieved across multiple languages (English, Hindi, Tamil). "
+            "Instructions:\n"
+            "1. Extract all factual information relevant to the question from ALL provided passages regardless of passage language.\n"
+            f"2. Synthesize a direct, complete, and fluent answer strictly in the target language: {lang_instruction}\n"
+            "3. Base your answer on the context passages. Explain the key facts clearly.\n"
+            "4. Only if the context passages are completely irrelevant and contain zero relevant facts, respond with: "
+            "'I don't have enough grounded information to answer that.'"
+        )
+        
+        user_content = f"Multi-Language Context Passages:\n{context}\n\nUser Question: {prompt}\n\nCompiled Grounded Answer:"
+        
+        max_tokens = 800 if ("glm" in model.lower() or "reason" in model.lower()) else 350
+        endpoint = f"{base_url.rstrip('/')}/chat/completions"
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            "temperature": 0.1,
+            "max_tokens": max_tokens,
+        }
+        
+        data = json.dumps(payload).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key.strip()}",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VoiceRAG/1.0",
+        }
+        
+        try:
+            req = urllib.request.Request(endpoint, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                if response.status == 200:
+                    resp_body = json.loads(response.read().decode("utf-8"))
+                    msg = resp_body["choices"][0]["message"]
+                    answer = (msg.get("content") or msg.get("reasoning") or "").strip()
+                    return answer if answer else None
+        except Exception as e:
+            logger.warning(f"Chat completion call to {base_url} ({model}) failed: {e}")
+            return None
+        return None
+
+    def generate(self, prompt: str, context: str, target_lang: Optional[str] = None) -> str:
+        """
+        Generate synthesized response grounded strictly in provided context passages.
+        Cascade Hierarchy:
+        1. Primary: Groq / Main LLM (e.g. llama-3.3-70b-versatile or llama-3.1-8b-instant)
+        2. Tier-2 Backup: Cerebras Gemma 4 31b (gemma-4-31b)
+        3. Tier-3 Backup: Cerebras GPT-OSS 120b (gpt-oss-120b)
+        4. Tier-4 Local: Deterministic multi-passage extractive fallback
+        """
+        if not config.ALLOW_NETWORK_CALLS_IN_PIPELINE:
+            return self._local_fallback_synthesize(prompt, context)
+
+        # Tier 1: Primary LLM (Groq / OpenAI-compatible)
+        if self.api_key and self.api_key.strip():
+            # Try configured model (with instant 8B fallback on 429)
+            primary_models = [self.model]
+            if "groq.com" in self.base_url and self.model != "llama-3.1-8b-instant":
+                primary_models.append("llama-3.1-8b-instant")
+                
+            for m in primary_models:
+                res = self._call_chat_endpoint(
+                    base_url=self.base_url,
+                    api_key=self.api_key,
+                    model=m,
+                    prompt=prompt,
+                    context=context,
+                    target_lang=target_lang,
+                    timeout=self.timeout,
+                )
+                if res:
+                    logger.info(f"Answer synthesized via Primary LLM ({m})")
+                    return res
+
+        # Tier 2: Cerebras Backup with Gemma 4 31b
+        cerebras_key = config.CEREBRAS_API_KEY
+        if cerebras_key and cerebras_key.strip():
+            logger.info("Failing over to Tier-2 Backup: Cerebras (model: %s)", config.CEREBRAS_MODEL)
+            res = self._call_chat_endpoint(
+                base_url=config.CEREBRAS_BASE_URL,
+                api_key=cerebras_key,
+                model=config.CEREBRAS_MODEL,
+                prompt=prompt,
+                context=context,
+                target_lang=target_lang,
+                timeout=config.CEREBRAS_TIMEOUT_SECONDS,
+            )
+            if res:
+                logger.info("Answer synthesized via Cerebras (%s)", config.CEREBRAS_MODEL)
+                return res
+
+            # Tier 3: Cerebras Backup with GPT-OSS 120b
+            logger.info("Failing over to Tier-3 Backup: Cerebras (model: %s)", config.CEREBRAS_FALLBACK_MODEL)
+            res = self._call_chat_endpoint(
+                base_url=config.CEREBRAS_BASE_URL,
+                api_key=cerebras_key,
+                model=config.CEREBRAS_FALLBACK_MODEL,
+                prompt=prompt,
+                context=context,
+                target_lang=target_lang,
+                timeout=config.CEREBRAS_TIMEOUT_SECONDS,
+            )
+            if res:
+                logger.info("Answer synthesized via Cerebras (%s)", config.CEREBRAS_FALLBACK_MODEL)
+                return res
+
+        # Tier 4: Deterministic local extractive synthesis
+        logger.warning("All LLM providers exhausted. Recovering via local deterministic synthesis.")
+        return self._local_fallback_synthesize(prompt, context)
+
+    def _local_fallback_synthesize(self, prompt: str, context: str) -> str:
+        """
+        Deterministic local multi-passage synthesizer when external LLM is offline.
+        """
+        if not context or not context.strip():
+            return "I don't have enough grounded information to answer that."
+        paragraphs = [p.strip() for p in context.split("\n\n") if p.strip()]
+        if paragraphs:
+            return paragraphs[0]
+        return context[:300].strip()
+
+
+_LLM_ADAPTER_INSTANCE: Optional[LLMAdapter] = None
+
+
+def get_llm_adapter() -> LLMAdapter:
+    """Singleton getter for LLMAdapter."""
+    global _LLM_ADAPTER_INSTANCE
+    if _LLM_ADAPTER_INSTANCE is None:
+        _LLM_ADAPTER_INSTANCE = LLMAdapter()
+    return _LLM_ADAPTER_INSTANCE
+
+
+def generate(prompt: str, context: str, target_lang: Optional[str] = None) -> str:
+    """Convenience functional wrapper for LLM generation."""
+    return get_llm_adapter().generate(prompt, context, target_lang=target_lang)

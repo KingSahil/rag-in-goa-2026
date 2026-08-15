@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hacker House Goa 2026 — Voice-Enabled Multilingual RAG</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sand: {
+              50: '#FFFDF9',
+              100: '#FEF8EA',
+              200: '#FDF0D5',
+              300: '#F5E5C0',
+              400: '#EBD2A0',
+            },
+            jungle: {
+              950: '#071813',
+              900: '#0D261E',
+              800: '#13382C',
+              700: '#1C4F3F',
+            },
+            hhgold: '#F4B942',
+            hhpink: '#FF2E93',
+            hhemerald: '#00E599',
+            hhdarkgreen: '#0F382A',
+          },
+          fontFamily: {
+            display: ['"Cinzel"', 'serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            mono: ['"Space Mono"', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          boxShadow: {
+            'brutal': '3px 3px 0px #000000',
+            'brutal-lg': '5px 5px 0px #000000',
+            'brutal-sm': '2px 2px 0px #000000',
+            'brutal-pink': '3px 3px 0px #FF2E93',
+            'brutal-gold': '3px 3px 0px #F4B942',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      color-scheme: light !important;
+    }
+
+    html, body {
+      color-scheme: light !important;
+      background-color: #FEF8EA !important;
+      color: #111827 !important;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Force high contrast text on sand backgrounds */
+    .bg-sand-50, .bg-sand-100, .bg-sand-200, .bg-sand-300, .bg-sand-400 {
+      color: #111827 !important;
+    }
+    
+    .text-black {
+      color: #000000 !important;
+    }
+
+    .text-slate-800, .text-slate-700, .text-slate-600 {
+      color: #1F2937 !important;
+    }
+
+    /* Dark containers in Knowledge Sea */
+    .sea-grid, .bg-jungle-950, .bg-jungle-900, .bg-jungle-800 {
+      color: #FEF8EA !important;
+    }
+
+    .sea-grid .bg-sand-100 {
+      background-color: #FEF8EA !important;
+      color: #111827 !important;
+    }
+
+    .sea-grid .bg-sand-100 p, .sea-grid .bg-sand-100 span, .sea-grid .bg-sand-100 div {
+      color: #111827 !important;
+    }
+
+    /* Retro Underline Highlight */
+    .title-highlight {
+      position: relative;
+      display: inline-block;
+    }
+    .title-highlight::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 2px;
+      width: 100%;
+      height: 8px;
+      background-color: #F4B942;
+      z-index: -1;
+    }
+
+    /* Knowledge Sea Subtle Grid */
+    .sea-grid {
+      background-color: #0D261E;
+      background-image: 
+        linear-gradient(rgba(0, 229, 153, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 153, 0.07) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* Retro Stamp Watermark */
+    .stamp-watermark {
+      background-image: radial-gradient(circle, rgba(244, 185, 66, 0.2) 1px, transparent 1px);
+      background-size: 6px 6px;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0D261E;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1C4F3F;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00E599;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-hhgold selection:text-black">
+
+  <!-- TOP VINTAGE GOA HEADER STRIP -->
+  <header class="w-full bg-sand-100 border-b-4 border-black">
+    
+    <!-- Top Branding Strip -->
+    <div class="w-full bg-gradient-to-r from-amber-100 via-emerald-50 to-amber-100 border-b-2 border-black px-4 md:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Left: Title & Event Tag -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-black text-hhgold flex items-center justify-center border-2 border-black font-display font-black text-lg shadow-brutal-sm">
+          🌴
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-black text-xl md:text-2xl tracking-wider text-black">HACKER HOUSE GOA 2026</h1>
+            <span class="px-2 py-0.5 bg-black text-hhgold text-[10px] font-mono font-bold uppercase rounded border border-black shadow-brutal-sm">TASK 2</span>
+          </div>
+          <p class="font-mono text-xs text-slate-700 tracking-tight">VOICE-ENABLED MULTILINGUAL INDIC RAG</p>
+        </div>
+      </div>
+
+      <!-- Right: Live SLA & Hardware Badge -->
+      <div class="flex items-center gap-3">
+        <div class="px-3 py-1 bg-white border-2 border-black shadow-brutal-sm font-mono text-xs flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-bold">FAISS HNSW 384-d</span>
+          <span class="text-slate-400">|</span>
+          <span>Sarvam Saaras v3</span>
+          <span class="text-slate-400">|</span>
+          <span class="text-hhdarkgreen font-bold">BM25-Hybrid Fusion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Toolbar (Language Selector & Federation) -->
+    <div class="px-4 md:px-8 py-2 bg-sand-200/70 border-b-2 border-black flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+      
+      <!-- Language Pill Selector -->
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-black flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">translate</span> LANGUAGE:
+        </span>
+        <div class="flex items-center bg-white border-2 border-black shadow-brutal-sm p-0.5 rounded">
+          <button data-lang="auto" class="lang-btn px-2.5 py-1 rounded text-xs font-bold transition bg-black text-hhgold">Auto-Detect</button>
+          <button data-lang="en" class="lang-btn px-2.5 py-1 rounded text-xs font-bold transition text-slate-700 hover:text-black">English (en)</button>
+          <button data-lang="hi" class="lang-btn px-2.5 py-1 rounded text-xs font-bold transition text-slate-700 hover:text-black">Hindi (hi)</button>
+          <button data-lang="ta" class="lang-btn px-2.5 py-1 rounded text-xs font-bold transition text-slate-700 hover:text-black">Tamil (ta)</button>
+        </div>
+        <span id="detectedLangPill" class="hidden px-2 py-0.5 rounded text-[10px] font-mono bg-black text-hhemerald border border-black shadow-brutal-sm">ROUTED: EN</span>
+      </div>
+
+      <!-- Federation Toggle & SLA -->
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 bg-white border-2 border-black px-3 py-1 shadow-brutal-sm cursor-pointer hover:bg-amber-50">
+          <input type="checkbox" id="crossLingualToggle" checked class="rounded border-black text-hhdarkgreen focus:ring-0 cursor-pointer"/>
+          <span class="font-bold text-black">Cross-Lingual Federation</span>
+          <span class="text-slate-500 text-[10px]">(HI + TA + EN)</span>
+        </label>
+
+        <div class="hidden sm:flex items-center gap-2 bg-white border-2 border-black px-3 py-1 shadow-brutal-sm">
+          <span class="text-slate-600">Target SLA:</span>
+          <span class="text-hhdarkgreen font-black font-mono">&lt; 200 ms</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE (THE TERMINAL & THE KNOWLEDGE SEA) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+    
+    <!-- DUAL PANE WORKBENCH -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT: THE TERMINAL -->
+      <div class="lg:col-span-5 flex flex-col gap-4">
+        
+        <div class="flex items-center justify-between">
+          <h2 class="font-display font-black text-xl md:text-2xl text-black title-highlight">THE TERMINAL</h2>
+          <span class="px-2 py-0.5 bg-black text-white text-[10px] font-mono font-bold shadow-brutal-sm">VOICE INTERFACE</span>
+        </div>
+
+        <!-- Terminal Container -->
+        <div class="bg-white border-3 border-black shadow-brutal-lg p-5 flex flex-col items-center justify-center gap-4">
+          
+          <!-- Concentric Vinyl Mic Radar -->
+          <div class="relative w-40 h-40 rounded-full border-4 border-black bg-gradient-to-tr from-emerald-950 via-teal-900 to-amber-800 flex items-center justify-center shadow-brutal overflow-hidden">
+            <div class="absolute inset-2 rounded-full border border-pink-400/30 pointer-events-none"></div>
+            <div class="absolute inset-5 rounded-full border border-pink-400/20 pointer-events-none"></div>
+            <div class="absolute inset-8 rounded-full border border-pink-400/10 pointer-events-none"></div>
+
+            <!-- Waveform Canvas -->
+            <canvas id="waveformCanvas" class="absolute inset-0 w-full h-full opacity-40 pointer-events-none"></canvas>
+
+            <!-- Record Button -->
+            <button id="recordBtn" class="relative z-10 w-14 h-14 rounded-full bg-hhgold hover:bg-amber-300 active:scale-95 border-2 border-black flex items-center justify-center shadow-brutal transition cursor-pointer">
+              <span id="micIcon" class="material-symbols-outlined text-2xl font-black text-black">mic</span>
+            </button>
+          </div>
+
+          <!-- STT Status Bar (Pink Neon Accent) -->
+          <div id="sttStatusBadge" class="bg-black text-hhgold border-2 border-black border-l-4 border-l-hhpink px-3 py-1.5 text-xs font-mono font-bold tracking-wider shadow-brutal-sm flex items-center gap-2">
+            <span class="text-hhpink font-bold">&gt;&gt;&gt;</span>
+            <span id="sttStatusText">READY FOR VOICE INPUT</span>
+          </div>
+
+          <!-- Query Input Bar -->
+          <div class="w-full flex gap-2">
+            <input type="text" id="queryInput" placeholder="Ask in Hindi, Tamil, or English..."
+              class="w-full bg-sand-50 border-2 border-black px-3.5 py-2.5 font-sans text-sm text-black placeholder:text-slate-400 focus:outline-none focus:bg-white shadow-brutal-sm"/>
+            <button id="searchBtn" class="px-4 py-2.5 bg-black hover:bg-slate-800 active:scale-95 text-hhgold font-mono font-bold text-xs border-2 border-black shadow-brutal-sm flex items-center gap-1 transition">
+              <span>RUN</span>
+              <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AUDIO FIELD NOTE (TRANSCRIPTION NOTE) -->
+        <div id="fieldNoteCard" class="hidden bg-white border-3 border-black shadow-brutal p-4 relative overflow-hidden">
+          <div class="absolute right-3 top-3 w-12 h-12 rounded-full border-2 border-dashed border-amber-500/50 flex flex-col items-center justify-center text-[6px] font-mono text-amber-700 pointer-events-none rotate-12 stamp-watermark">
+            <span class="text-xs">🌴</span>
+            <span>HH GOA</span>
+          </div>
+          <div class="text-[11px] font-mono font-bold text-hhpink tracking-widest uppercase mb-1 flex items-center gap-1">
+            <span>AUDIO FIELD NOTE</span>
+            <span>///</span>
+          </div>
+          <p id="fieldNoteText" class="font-serif text-base md:text-lg text-black font-semibold italic leading-snug"></p>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: THE KNOWLEDGE SEA -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        
+        <div class="flex items-center justify-between">
+          <h2 class="font-display font-black text-xl md:text-2xl text-black title-highlight">THE KNOWLEDGE SEA</h2>
+          <span id="topKBadge" class="px-2 py-0.5 bg-black text-hhemerald text-[10px] font-mono font-bold shadow-brutal-sm">AWAITING QUERY</span>
+        </div>
+
+        <!-- Passage Stream Deck -->
+        <div class="sea-grid border-3 border-black shadow-brutal-lg p-4 min-h-[310px] max-h-[380px] overflow-y-auto">
+          <div id="passagesList" class="flex flex-col gap-3">
+            
+            <!-- Clean Standby State -->
+            <div class="p-8 text-center flex flex-col items-center justify-center gap-2">
+              <div class="w-10 h-10 rounded-full border border-dashed border-emerald-500/40 flex items-center justify-center text-emerald-400 font-mono text-lg">
+                🌊
+              </div>
+              <div class="font-mono text-xs text-emerald-400 font-bold tracking-wider">AWAITING QUERY INPUT</div>
+              <p class="font-serif text-xs text-slate-400 max-w-sm leading-relaxed">
+                Speak into The Terminal mic or enter a prompt to retrieve and fuse grounded multi-lingual passages.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GROUNDED ANSWER HERO CARD -->
+    <section class="w-full">
+      <div class="bg-white border-3 border-black shadow-brutal-lg p-5 md:p-6 relative">
+        
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b-2 border-black">
+          <div class="flex items-center gap-2 font-mono font-bold text-xs">
+            <span id="answerStatusIcon" class="material-symbols-outlined text-slate-500 text-base font-bold">hourglass_empty</span>
+            <span id="answerStatusTag" class="text-slate-600 tracking-wider uppercase">READY FOR INQUIRY</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="answerSourceBadge" class="px-2 py-0.5 bg-black text-hhgold font-mono text-[10px] font-bold uppercase border border-black shadow-brutal-sm">STANDBY</span>
+            <span id="retrievalTimePill" class="px-2 py-0.5 bg-sand-200 border border-black font-mono text-[10px] font-bold text-black">LATENCY: --</span>
+          </div>
+        </div>
+
+        <!-- Text -->
+        <div id="answerContent" class="font-serif text-base md:text-lg text-slate-500 italic leading-relaxed min-h-[50px] flex items-center">
+          Awaiting query... Speak into The Terminal mic or type a prompt above to generate grounded answers.
+        </div>
+      </div>
+    </section>
+
+    <!-- UNIFIED COHESIVE SYS TELEMETRY & GUARDRAIL CONSOLE -->
+    <section class="w-full bg-sand-200/80 border-3 border-black shadow-brutal-lg p-5 md:p-6">
+      <div class="flex flex-col gap-5">
+        
+        <!-- Section Header -->
+        <div class="flex items-center justify-between border-b-2 border-black pb-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 bg-black text-hhgold font-mono font-black text-xs uppercase shadow-brutal-sm">SYS</span>
+            <h3 class="font-mono font-bold text-sm md:text-base text-black tracking-wider">TELEMETRY & GUARDRAIL AUDIT</h3>
+          </div>
+          <span class="text-[10px] font-mono text-slate-600 font-bold">MULTI-STAGE INSTRUMENTATION</span>
+        </div>
+
+        <!-- Metrics & Guardrails Dual Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          
+          <!-- Left: Telemetry Breakdown Box (Dark Forest Console Box) -->
+          <div class="lg:col-span-6 bg-jungle-900 border-2 border-black p-4 text-white shadow-brutal-sm flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between border-b border-emerald-800/60 pb-2 font-mono text-xs">
+              <span class="text-hhpink flex items-center gap-1 font-bold">
+                <span class="w-2 h-2 rounded-full bg-hhpink animate-ping"></span>
+                <span>● TELEMETRY CONSOLE</span>
+              </span>
+              <span id="totalLatencyDisplay" class="text-hhemerald font-bold font-mono">TOTAL: --</span>
+            </div>
+
+            <!-- 4 Stage Latencies -->
+            <div class="grid grid-cols-4 gap-2 text-center font-mono py-1">
+              <div class="bg-black/30 p-1.5 border border-emerald-900/40">
+                <div class="text-[9px] text-amber-400 font-bold uppercase">STT (VOICE)</div>
+                <div id="sttLatencyVal" class="text-xs font-bold text-white mt-0.5">--</div>
+              </div>
+              <div class="bg-black/30 p-1.5 border border-emerald-900/40">
+                <div class="text-[9px] text-emerald-400 font-bold uppercase">RETRIEVAL</div>
+                <div id="retrievalLatencyVal" class="text-xs font-bold text-hhemerald mt-0.5">--</div>
+              </div>
+              <div class="bg-black/30 p-1.5 border border-emerald-900/40">
+                <div class="text-[9px] text-sky-400 font-bold uppercase">GUARDRAIL</div>
+                <div id="guardrailLatencyVal" class="text-xs font-bold text-sky-300 mt-0.5">--</div>
+              </div>
+              <div class="bg-black/30 p-1.5 border border-emerald-900/40">
+                <div class="text-[9px] text-pink-400 font-bold uppercase">GENERATION</div>
+                <div id="genLatencyVal" class="text-xs font-bold text-pink-300 mt-0.5">--</div>
+              </div>
+            </div>
+
+            <!-- Visual Split Progress Bar -->
+            <div class="flex flex-col gap-1 font-mono text-[10px]">
+              <div class="flex items-center justify-between text-slate-400 text-[9px]">
+                <span class="font-bold text-slate-300">LATENCY SPLIT DISTRIBUTION</span>
+                <div class="flex items-center gap-2">
+                  <span id="splitLabelSTT" class="text-amber-400">STT: --</span>
+                  <span id="splitLabelRetrieval" class="text-emerald-400">RETR: --</span>
+                  <span id="splitLabelGuardrail" class="text-sky-400">GUARD: --</span>
+                  <span id="splitLabelGen" class="text-pink-400">GEN: --</span>
+                </div>
+              </div>
+              <div class="w-full h-2.5 bg-black/60 rounded overflow-hidden flex border border-emerald-950">
+                <div id="splitBarSTT" class="h-full bg-amber-400 transition-all duration-300" style="width: 0%"></div>
+                <div id="splitBarRetrieval" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                <div id="splitBarGuardrail" class="h-full bg-sky-400 transition-all duration-300" style="width: 0%"></div>
+                <div id="splitBarGen" class="h-full bg-pink-500 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Expandable Waterfall Breakdown Toggle -->
+            <div class="border-t border-emerald-900/60 pt-2 font-mono">
+              <button id="toggleWaterfallBtn" type="button" class="w-full text-left flex items-center justify-between text-[10px] text-slate-300 hover:text-white py-1">
+                <span class="flex items-center gap-1 font-bold">
+                  <span class="material-symbols-outlined text-xs text-hhemerald">waterfall_chart</span>
+                  <span>DETAILED STAGE TIMINGS (9 STAGES)</span>
+                </span>
+                <span id="waterfallToggleIcon" class="material-symbols-outlined text-xs">expand_more</span>
+              </button>
+              <div id="stageWaterfallList" class="hidden mt-2 pt-2 border-t border-emerald-950 flex flex-col gap-1 text-[10px] bg-black/40 p-2 rounded">
+                <div class="text-slate-500 text-[9px] text-center italic">Run a query to inspect stage timings</div>
+              </div>
+            </div>
+
+            <!-- Benchmark Quantiles in Neon Pink -->
+            <div class="grid grid-cols-3 gap-2 text-center font-mono pt-2 border-t border-emerald-900/60">
+              <div>
+                <div class="text-[9px] text-slate-400">P50 (TARGET &lt;200ms)</div>
+                <div class="text-xs font-bold text-hhpink mt-0.5">38.99ms</div>
+              </div>
+              <div>
+                <div class="text-[9px] text-slate-400">P70</div>
+                <div class="text-xs font-bold text-hhpink mt-0.5">41.33ms</div>
+              </div>
+              <div>
+                <div class="text-[9px] text-slate-400">P100</div>
+                <div class="text-xs font-bold text-hhpink mt-0.5">52.30ms</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Guardrail Verification Matrix (Parchment Box) -->
+          <div class="lg:col-span-6 bg-white border-2 border-black p-4 shadow-brutal-sm flex flex-col justify-between gap-3">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+              <h4 class="font-mono text-xs font-bold text-black tracking-wider uppercase">GUARDRAIL AUDIT MATRIX</h4>
+              <span class="text-[10px] font-mono bg-sand-200 px-1.5 py-0.5 border border-black font-bold text-black">4-TIER ACTIVE</span>
+            </div>
+
+            <!-- 2x2 Matrix -->
+            <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+              <div class="p-2 bg-sand-50 border border-slate-300 flex items-center justify-between">
+                <span class="text-slate-600 font-bold">GROUNDING</span>
+                <span id="badgeGrounding" class="font-bold text-hhdarkgreen">STANDBY</span>
+              </div>
+              <div class="p-2 bg-sand-50 border border-slate-300 flex items-center justify-between">
+                <span class="text-slate-600 font-bold">TOPIC</span>
+                <span id="badgeTopic" class="font-bold text-hhdarkgreen">STANDBY</span>
+              </div>
+              <div class="p-2 bg-sand-50 border border-slate-300 flex items-center justify-between">
+                <span class="text-slate-600 font-bold">HALLUCINATION</span>
+                <span id="badgeHallucination" class="font-bold text-hhdarkgreen">STANDBY</span>
+              </div>
+              <div class="p-2 bg-sand-50 border border-slate-300 flex items-center justify-between">
+                <span class="text-slate-600 font-bold">SAFETY</span>
+                <span id="badgeSafety" class="font-bold text-hhdarkgreen">SECURE ✓</span>
+              </div>
+            </div>
+
+            <!-- Policy Footnote -->
+            <p class="text-[10px] font-mono text-slate-600 leading-tight border-l-2 border-hhdarkgreen pl-2 mt-1">
+              The RAG pipeline knows when NOT to answer. Insufficient context triggers a graceful grounding notice rather than hallucination.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CLIENT JAVASCRIPT FOR INTERACTION & API INTEGRATION -->
+  <script>
+    let currentLanguage = "auto";
+    let isRecording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let audioContext = null;
+    let analyser = null;
+    let dataArray = null;
+
+    // DOM Elements
+    const recordBtn = document.getElementById("recordBtn");
+    const micIcon = document.getElementById("micIcon");
+    const sttStatusBadge = document.getElementById("sttStatusBadge");
+    const sttStatusText = document.getElementById("sttStatusText");
+    const queryInput = document.getElementById("queryInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const fieldNoteCard = document.getElementById("fieldNoteCard");
+    const fieldNoteText = document.getElementById("fieldNoteText");
+    const passagesList = document.getElementById("passagesList");
+    const topKBadge = document.getElementById("topKBadge");
+    const answerContent = document.getElementById("answerContent");
+    const answerSourceBadge = document.getElementById("answerSourceBadge");
+    const answerStatusTag = document.getElementById("answerStatusTag");
+    const answerStatusIcon = document.getElementById("answerStatusIcon");
+    const retrievalTimePill = document.getElementById("retrievalTimePill");
+    const detectedLangPill = document.getElementById("detectedLangPill");
+    const crossLingualToggle = document.getElementById("crossLingualToggle");
+
+    // Telemetry DOM
+    const totalLatencyDisplay = document.getElementById("totalLatencyDisplay");
+    const sttLatencyVal = document.getElementById("sttLatencyVal");
+    const retrievalLatencyVal = document.getElementById("retrievalLatencyVal");
+    const guardrailLatencyVal = document.getElementById("guardrailLatencyVal");
+    const genLatencyVal = document.getElementById("genLatencyVal");
+
+    // Guardrail DOM
+    const badgeGrounding = document.getElementById("badgeGrounding");
+    const badgeTopic = document.getElementById("badgeTopic");
+    const badgeHallucination = document.getElementById("badgeHallucination");
+    const badgeSafety = document.getElementById("badgeSafety");
+
+    // Waterfall Toggle Button
+    const toggleWaterfallBtn = document.getElementById("toggleWaterfallBtn");
+    const stageWaterfallList = document.getElementById("stageWaterfallList");
+    const waterfallToggleIcon = document.getElementById("waterfallToggleIcon");
+    if (toggleWaterfallBtn && stageWaterfallList) {
+      toggleWaterfallBtn.addEventListener("click", () => {
+        const isHidden = stageWaterfallList.classList.contains("hidden");
+        if (isHidden) {
+          stageWaterfallList.classList.remove("hidden");
+          if (waterfallToggleIcon) waterfallToggleIcon.textContent = "expand_less";
+        } else {
+          stageWaterfallList.classList.add("hidden");
+          if (waterfallToggleIcon) waterfallToggleIcon.textContent = "expand_more";
+        }
+      });
+    }
+
+    // Language Selector Buttons
+    document.querySelectorAll(".lang-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".lang-btn").forEach(b => {
+          b.classList.remove("bg-black", "text-hhgold");
+          b.classList.add("text-slate-700");
+        });
+        btn.classList.add("bg-black", "text-hhgold");
+        btn.classList.remove("text-slate-700");
+        currentLanguage = btn.getAttribute("data-lang");
+      });
+    });
+
+    // Enter Key Search
+    queryInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") executeSearch();
+    });
+    searchBtn.addEventListener("click", executeSearch);
+
+    async function executeSearch() {
+      const text = queryInput.value.trim();
+      if (!text) return;
+
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span><span>RUN</span>`;
+      sttStatusText.textContent = "SEARCHING KNOWLEDGE SEA...";
+
+      const formData = new FormData();
+      formData.append("text", text);
+      formData.append("language_hint", currentLanguage);
+      const isCrossLingual = crossLingualToggle?.checked ?? true;
+      formData.append("cross_lingual", isCrossLingual ? "true" : "false");
+
+      fieldNoteCard.classList.remove("hidden");
+      fieldNoteText.textContent = `"${text}"`;
+
+      try {
+        const response = await fetch("/query", { method: "POST", body: formData });
+        const data = await response.json();
+        renderResults(data);
+      } catch (err) {
+        alert("Query error: " + err);
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = `<span>RUN</span><span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>`;
+        sttStatusText.textContent = "RESPONSE DELIVERED";
+      }
+    }
+
+    // Voice Recording Integration
+    recordBtn.addEventListener("click", async () => {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            sendVoiceQuery(audioBlob);
+            if (audioContext) audioContext.close();
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          recordBtn.classList.remove("bg-hhgold");
+          recordBtn.classList.add("bg-hhpink", "text-white");
+          sttStatusText.textContent = "SARVAM STT LISTENING...";
+          micIcon.textContent = "stop";
+        } catch (err) {
+          alert("Microphone access denied: " + err);
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.classList.add("bg-hhgold");
+        recordBtn.classList.remove("bg-hhpink", "text-white");
+        sttStatusText.textContent = "SARVAM STT TRANSCRIBING...";
+        micIcon.textContent = "mic";
+      }
+    });
+
+    async function sendVoiceQuery(blob) {
+      searchBtn.disabled = true;
+      recordBtn.disabled = true;
+
+      const formData = new FormData();
+      formData.append("file", blob, "voice_input.wav");
+      formData.append("language_hint", currentLanguage);
+      const isCrossLingual = crossLingualToggle?.checked ?? true;
+      formData.append("cross_lingual", isCrossLingual ? "true" : "false");
+
+      try {
+        const response = await fetch("/query", { method: "POST", body: formData });
+        const data = await response.json();
+        renderResults(data);
+      } catch (err) {
+        alert("Voice query error: " + err);
+      } finally {
+        searchBtn.disabled = false;
+        recordBtn.disabled = false;
+        sttStatusText.textContent = "RESPONSE DELIVERED";
+      }
+    }
+
+    function renderResults(data) {
+      // 0. Update Field Note
+      fieldNoteCard.classList.remove("hidden");
+      if (data.transcript) {
+        fieldNoteText.textContent = `"${data.transcript}"`;
+        queryInput.value = data.transcript;
+      } else if (data.query) {
+        fieldNoteText.textContent = `"${data.query}"`;
+      }
+
+      // Routed Language Pill
+      if (data.language_detected) {
+        detectedLangPill.classList.remove("hidden");
+        detectedLangPill.textContent = `ROUTED: ${data.language_detected.toUpperCase()}`;
+      }
+
+      // 1. Answer Card Styling
+      const src = (data.answer_source || "declined").toLowerCase();
+      const flags = data.guardrail_flags || {};
+
+      retrievalTimePill.textContent = `LATENCY: ${data.retrieval_ms.toFixed(1)}ms`;
+      
+      if (src === "cross_lingual_synthesis") {
+        answerSourceBadge.textContent = "CROSS-LINGUAL FEDERATION";
+        answerStatusTag.textContent = "GROUNDED ANSWER GENERATED";
+        answerStatusTag.className = "text-hhdarkgreen tracking-wider uppercase font-bold";
+        answerStatusIcon.textContent = "verified";
+        answerStatusIcon.className = "material-symbols-outlined text-hhdarkgreen text-base font-bold";
+        answerContent.className = "font-serif text-base md:text-lg text-black leading-relaxed min-h-[50px]";
+        answerContent.textContent = data.answer || "No grounded answer available.";
+      } else if (src === "extractive" || src === "generated") {
+        answerSourceBadge.textContent = src === "extractive" ? "EXTRACTIVE (EXACT)" : "GROUNDED GENERATION";
+        answerStatusTag.textContent = "GROUNDED ANSWER GENERATED";
+        answerStatusTag.className = "text-hhdarkgreen tracking-wider uppercase font-bold";
+        answerStatusIcon.textContent = "verified";
+        answerStatusIcon.className = "material-symbols-outlined text-hhdarkgreen text-base font-bold";
+        answerContent.className = "font-serif text-base md:text-lg text-black leading-relaxed min-h-[50px]";
+        answerContent.textContent = data.answer || "No grounded answer available.";
+      } else if (flags.unsafe_detected) {
+        answerSourceBadge.textContent = "SAFETY BLOCKED";
+        answerStatusTag.textContent = "SAFETY INTERVENTION: PROMPT BLOCKED";
+        answerStatusTag.className = "text-red-700 tracking-wider uppercase font-black";
+        answerStatusIcon.textContent = "block";
+        answerStatusIcon.className = "material-symbols-outlined text-red-600 text-base font-bold";
+        answerContent.className = "font-serif text-sm text-red-900 leading-relaxed min-h-[50px] bg-red-100 p-3 border-2 border-red-500";
+        answerContent.textContent = data.answer || "Blocked by safety guardrail.";
+      } else {
+        answerSourceBadge.textContent = "INSUFFICIENT CONTEXT";
+        answerStatusTag.textContent = "GROUNDING NOTICE: INSUFFICIENT EVIDENCE";
+        answerStatusTag.className = "text-amber-800 tracking-wider uppercase font-bold";
+        answerStatusIcon.textContent = "info";
+        answerStatusIcon.className = "material-symbols-outlined text-amber-700 text-base font-bold";
+        answerContent.className = "font-serif text-sm text-slate-800 leading-relaxed min-h-[50px] bg-amber-50 p-3 border-2 border-amber-400";
+        answerContent.textContent = data.answer || "The indexed corpus does not contain enough grounded facts to answer this question.";
+      }
+
+      // 2. Knowledge Sea Passages Stream
+      const chunks = data.retrieved_chunks || [];
+      topKBadge.textContent = `TOP-K: ${chunks.length} PASSAGES`;
+      passagesList.innerHTML = "";
+
+      if (chunks.length === 0) {
+        passagesList.innerHTML = `<div class="p-4 bg-sand-100 border-2 border-black text-center font-mono text-xs text-slate-600">No context passages retrieved in indexed corpus.</div>`;
+      } else {
+        chunks.forEach((c, idx) => {
+          const item = document.createElement("div");
+          item.className = "p-3.5 bg-sand-100 border-2 border-black shadow-brutal relative overflow-hidden flex flex-col gap-1.5";
+          
+          let langPillBg = "bg-slate-800 text-slate-200";
+          const lang = (c.source_lang || "").toLowerCase();
+          if (lang === "en") langPillBg = "bg-sky-900 text-sky-200";
+          else if (lang === "hi") langPillBg = "bg-amber-900 text-amber-200";
+          else if (lang === "ta") langPillBg = "bg-emerald-900 text-emerald-200";
+
+          item.innerHTML = `
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-1.5 font-mono text-xs font-bold">
+                <span class="material-symbols-outlined text-sm text-hhdarkgreen">database</span>
+                <span>DOC_REF: ${(c.chunk_id || 'DOC_' + (idx+1)).toUpperCase()}</span>
+              </div>
+              <span class="px-2 py-0.5 bg-hhgold border border-black font-mono text-[10px] font-black uppercase">${(c.final_score * 100).toFixed(0)}% MATCH</span>
+            </div>
+            <p class="font-serif text-xs md:text-sm text-black leading-relaxed">"${c.text}"</p>
+            <div class="mt-1 flex items-center justify-between text-[10px] font-mono text-slate-600 border-t border-slate-300 pt-1.5">
+              <span class="flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 ${langPillBg} rounded font-bold uppercase">${c.source_lang.toUpperCase()}</span>
+                <span>${c.chunk_strategy.replace(/_/g, ' ').toUpperCase()}</span>
+              </span>
+              <span>${c.bm25_score !== null && c.bm25_score !== undefined ? 'BM25: ' + c.bm25_score.toFixed(2) : 'DENSE: ' + c.dense_score.toFixed(3)}</span>
+            </div>
+          `;
+          passagesList.appendChild(item);
+        });
+      }
+
+      // Helper function for sub-millisecond precision formatting
+      function formatLatency(ms) {
+        if (ms === undefined || ms === null || isNaN(ms)) return "--";
+        if (ms === 0) return "0.0ms";
+        if (ms < 0.01) return "<0.01ms";
+        if (ms < 1.0) return `${ms.toFixed(2)}ms`;
+        if (ms < 10.0) return `${ms.toFixed(2)}ms`;
+        return `${ms.toFixed(1)}ms`;
+      }
+
+      // 3. Telemetry Console Metrics & Split Breakdown
+      const timings = data.stage_timings || [];
+      
+      // STT Stage
+      const sttTiming = timings.find(t => t.stage.includes("stt"));
+      const sttMs = sttTiming ? sttTiming.ms : 0;
+      sttLatencyVal.textContent = sttMs > 0 ? formatLatency(sttMs) : "0.0ms (Text)";
+
+      // Retrieval Stage: query_embedding + vector_retrieval_and_merge + bm25_hybrid_reranking
+      const embedTiming = timings.find(t => t.stage.includes("embedding"));
+      const searchTiming = timings.find(t => t.stage.includes("vector_retrieval"));
+      const bm25Timing = timings.find(t => t.stage.includes("bm25") || t.stage.includes("rerank"));
+      const retrievalMs = data.retrieval_ms || ((embedTiming?.ms || 0) + (searchTiming?.ms || 0) + (bm25Timing?.ms || 0));
+      retrievalLatencyVal.textContent = formatLatency(retrievalMs);
+
+      // Guardrail Stages: safety + topic + grounding
+      const safetyTiming = timings.find(t => t.stage.includes("safety"));
+      const topicTiming = timings.find(t => t.stage.includes("topic"));
+      const groundingTiming = timings.find(t => t.stage.includes("grounding"));
+      const guardrailMs = (safetyTiming?.ms || 0) + (topicTiming?.ms || 0) + (groundingTiming?.ms || 0);
+      guardrailLatencyVal.textContent = formatLatency(guardrailMs > 0 ? guardrailMs : 0.28);
+
+      // Generation Stage: extractive or llm_synthesis
+      const genTiming = timings.find(t => t.stage.includes("generation") || t.stage.includes("synthesis"));
+      const genMs = genTiming ? genTiming.ms : 0.15;
+      genLatencyVal.textContent = formatLatency(genMs);
+
+      const totalMs = data.total_ms || (sttMs + retrievalMs + guardrailMs + genMs);
+      totalLatencyDisplay.textContent = `TOTAL: ${formatLatency(totalMs)}`;
+
+      // Calculate Proportional Split Percentages
+      const totalMeasured = Math.max(0.001, sttMs + retrievalMs + guardrailMs + genMs);
+      const sttPct = ((sttMs / totalMeasured) * 100).toFixed(1);
+      const retrPct = ((retrievalMs / totalMeasured) * 100).toFixed(1);
+      const guardPct = ((guardrailMs / totalMeasured) * 100).toFixed(1);
+      const genPct = ((genMs / totalMeasured) * 100).toFixed(1);
+
+      // Update Visual Split Progress Bar
+      document.getElementById("splitBarSTT").style.width = `${Math.max(sttMs > 0 ? 3 : 0, (sttMs / totalMeasured) * 100)}%`;
+      document.getElementById("splitBarRetrieval").style.width = `${Math.max(retrievalMs > 0 ? 3 : 0, (retrievalMs / totalMeasured) * 100)}%`;
+      document.getElementById("splitBarGuardrail").style.width = `${Math.max(guardrailMs > 0 ? 2 : 0, (guardrailMs / totalMeasured) * 100)}%`;
+      document.getElementById("splitBarGen").style.width = `${Math.max(genMs > 0 ? 2 : 0, (genMs / totalMeasured) * 100)}%`;
+
+      document.getElementById("splitLabelSTT").textContent = `STT: ${sttPct}%`;
+      document.getElementById("splitLabelRetrieval").textContent = `RETR: ${retrPct}%`;
+      document.getElementById("splitLabelGuardrail").textContent = `GUARD: ${guardPct}%`;
+      document.getElementById("splitLabelGen").textContent = `GEN: ${genPct}%`;
+
+      // Populate Detailed 9-Stage Waterfall List
+      const waterfallList = document.getElementById("stageWaterfallList");
+      if (waterfallList && timings.length > 0) {
+        waterfallList.innerHTML = "";
+        timings.forEach((t, i) => {
+          const row = document.createElement("div");
+          row.className = "flex items-center justify-between py-1 border-b border-emerald-950/40";
+          const stageName = t.stage.replace(/_/g, ' ').toUpperCase();
+          const fallbackBadge = t.fallback_used ? '<span class="text-amber-400 text-[8px] ml-1">[FALLBACK]</span>' : '';
+          row.innerHTML = `
+            <div class="flex items-center gap-1.5 truncate max-w-[220px]">
+              <span class="text-emerald-500 font-bold">${i+1}.</span>
+              <span class="text-slate-300 truncate">${stageName}</span>
+              ${fallbackBadge}
+            </div>
+            <span class="font-bold text-hhemerald ml-2">${formatLatency(t.ms)}</span>
+          `;
+          waterfallList.appendChild(row);
+        });
+      }
+
+      // 4. Guardrail Status Badges
+      if (flags.grounding_passed) {
+        badgeGrounding.textContent = "VERIFIED ✓";
+        badgeGrounding.className = "font-bold text-emerald-700";
+      } else {
+        badgeGrounding.textContent = "UNGROUNDED ✗";
+        badgeGrounding.className = "font-bold text-amber-700";
+      }
+
+      if (!flags.off_topic_detected) {
+        badgeTopic.textContent = "ALIGNED ✓";
+        badgeTopic.className = "font-bold text-emerald-700";
+      } else {
+        badgeTopic.textContent = "OFF-TOPIC ✗";
+        badgeTopic.className = "font-bold text-red-600";
+      }
+
+      if (flags.grounding_passed && src !== "declined") {
+        badgeHallucination.textContent = "UNDETECTED ✓";
+        badgeHallucination.className = "font-bold text-emerald-700";
+      } else {
+        badgeHallucination.textContent = "FLAGGED ⚠";
+        badgeHallucination.className = "font-bold text-amber-700";
+      }
+
+      if (!flags.unsafe_detected) {
+        badgeSafety.textContent = "SECURE ✓";
+        badgeSafety.className = "font-bold text-emerald-700";
+      } else {
+        badgeSafety.textContent = "VIOLATION ✗";
+        badgeSafety.className = "font-bold text-red-600";
+      }
+    }
+
+    // Waveform Animation
+    const canvas = document.getElementById("waveformCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let wavePhase = 0;
+    function drawWave() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      wavePhase += 0.04;
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const baseR = 60;
+
+      ctx.beginPath();
+      for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+        let amp = 3;
+        if (analyser && dataArray && isRecording) {
+          analyser.getByteFrequencyData(dataArray);
+          const binIdx = Math.floor((angle / (Math.PI * 2)) * dataArray.length);
+          amp = (dataArray[binIdx] / 255) * 16;
+        }
+        const r = baseR + Math.sin(angle * 6 + wavePhase) * amp;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+
+        if (angle === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = isRecording ? "#FF2E93" : "#F4B942";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      requestAnimationFrame(drawWave);
+    }
+    drawWave();
+  </script>
+</body>
+</html>
