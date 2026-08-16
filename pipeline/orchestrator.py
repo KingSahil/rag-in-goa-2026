@@ -290,13 +290,44 @@ class RAGPipelineOrchestrator:
         
         # Cross-Encoder deep cross-attention re-ranking on top candidates
         if getattr(config, "ENABLE_CROSS_ENCODER", True):
-            reranked_chunks = rerank_cross_encoder(
+            reranked_raw = rerank_cross_encoder(
                 query_text=raw_query_text,
                 candidates=bm25_reranked,
                 top_k=config.CROSS_ENCODER_TOP_K,
             )
         else:
-            reranked_chunks = bm25_reranked
+            reranked_raw = bm25_reranked
+            
+        # Post-reranking text deduplication to guarantee diverse passages
+        reranked_chunks = []
+        for cand in reranked_raw:
+            text = (cand.get("text") or "").strip()
+            if not text:
+                continue
+            
+            is_dup = False
+            t_clean = re.sub(r'\s+', ' ', text.lower())
+            words = set(t_clean.split())
+            
+            for accepted in reranked_chunks:
+                acc_text = (accepted.get("text") or "").strip()
+                acc_clean = re.sub(r'\s+', ' ', acc_text.lower())
+                
+                # Check substring containment (e.g. sentence-window inside semantic chunk)
+                if t_clean in acc_clean or acc_clean in t_clean:
+                    is_dup = True
+                    break
+                    
+                # Check token overlap
+                acc_words = set(acc_clean.split())
+                if words and acc_words:
+                    overlap = len(words & acc_words) / min(len(words), len(acc_words))
+                    if overlap >= 0.70:
+                        is_dup = True
+                        break
+                        
+            if not is_dup:
+                reranked_chunks.append(cand)
             
         # Post-retrieval confidence & cross-encoder relevance check
         top_chunk = reranked_chunks[0] if reranked_chunks else None

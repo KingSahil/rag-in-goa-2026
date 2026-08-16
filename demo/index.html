@@ -810,13 +810,17 @@
           else if (lang === "hi") langPillBg = "bg-amber-950 text-amber-300 border border-amber-600";
           else if (lang === "ta") langPillBg = "bg-emerald-950 text-emerald-300 border border-emerald-600";
 
+          const rawScore = typeof c.final_score === "number" ? c.final_score : (c.dense_score || 0.5);
+          const normScore = rawScore > 1.0 ? (1.0 / (1.0 + Math.exp(-rawScore))) : Math.max(0, Math.min(1, rawScore));
+          const matchPct = Math.round(normScore * 100);
+
           item.innerHTML = `
             <div class="flex items-center justify-between mb-1">
               <div class="flex items-center gap-1.5 font-mono text-xs font-bold text-hhgold">
                 <span class="material-symbols-outlined text-sm text-hhemerald">database</span>
                 <span>DOC_REF: ${(c.chunk_id || 'DOC_' + (idx+1)).toUpperCase()}</span>
               </div>
-              <span class="px-2 py-0.5 bg-hhgold text-black border border-black font-mono text-[10px] font-black uppercase rounded shadow-brutal-sm">${(c.final_score * 100).toFixed(0)}% MATCH</span>
+              <span class="px-2 py-0.5 bg-hhgold text-black border border-black font-mono text-[10px] font-black uppercase rounded shadow-brutal-sm">${matchPct}% MATCH</span>
             </div>
             <p class="font-serif text-xs md:text-sm text-slate-200 leading-relaxed">"${c.text}"</p>
             <div class="mt-1 flex items-center justify-between text-[10px] font-mono text-slate-400 border-t border-hhjungle-800 pt-2">

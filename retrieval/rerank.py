@@ -249,7 +249,7 @@ def rerank_cross_encoder(
             # Recalibrate composite confidence blending cross-encoder with dense score
             dense_val = float(c.get("dense_score", 0.5))
             c["confidence"] = round(0.70 * sig_ce + 0.30 * dense_val, 4)
-            c["final_score"] = round(raw_ce, 4)
+            c["final_score"] = c["confidence"]
             scored_candidates.append(c)
             
         # Append remaining candidates beyond top_k if any
@@ -258,6 +258,8 @@ def rerank_cross_encoder(
                 c = cand.copy()
                 c["cross_encoder_score"] = -10.0
                 c["ce_prob"] = 0.0
+                c["confidence"] = round(float(c.get("confidence", c.get("dense_score", 0.0))), 4)
+                c["final_score"] = c["confidence"]
                 scored_candidates.append(c)
                 
         # Sort by cross-encoder score descending

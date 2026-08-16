@@ -45,6 +45,15 @@ class MergedCandidate:
         }
 
 
+import re
+
+def _normalize_text_key(text: str) -> str:
+    """Normalizes text for robust candidate deduplication."""
+    # Take first 180 alphanumeric characters in lowercase
+    clean = re.sub(r'[\W_]+', '', text.lower())
+    return clean[:180] if len(clean) >= 180 else clean
+
+
 def merge_and_fuse_candidates(
     strategy_results: Dict[str, List[Dict[str, Any]]],
     rrf_k: int = 60,
@@ -52,7 +61,7 @@ def merge_and_fuse_candidates(
 ) -> List[MergedCandidate]:
     """
     Combines results from multiple retrieval strategies using Reciprocal Rank Fusion (RRF)
-    and deduplicates candidates.
+    and robustly deduplicates candidates by canonical text content.
     
     RRF Score: sum_i ( weight_i / (k + rank_i) )
     """
@@ -69,13 +78,16 @@ def merge_and_fuse_candidates(
         weight = strategy_weights.get(strategy_name, 1.0)
         
         for rank, item in enumerate(results):
-            # Key candidate by chunk_id or text snippet hash to avoid duplicates
             cid = item.get("chunk_id", "")
-            text = item.get("text", "")
+            text = (item.get("text") or "").strip()
             if not text:
                 continue
                 
-            dedup_key = cid if cid else hash(text[:100])
+            # Canonical deduplication by normalized text content
+            dedup_key = _normalize_text_key(text)
+            if not dedup_key:
+                dedup_key = cid or f"chunk_{rank}"
+                
             score = float(item.get("score", 0.0))
             rrf_addition = weight / (rrf_k + rank + 1)
             
@@ -94,6 +106,7 @@ def merge_and_fuse_candidates(
                 existing.rrf_score += rrf_addition
                 if score > existing.dense_score:
                     existing.dense_score = score
+                    existing.chunk_id = cid
                 if strategy_name not in existing.contributing_strategies:
                     existing.contributing_strategies.append(strategy_name)
                     
