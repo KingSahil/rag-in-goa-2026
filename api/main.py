@@ -3,11 +3,14 @@ FastAPI Serving Layer for Voice-Enabled Indic RAG System.
 
 Endpoints:
 - POST /query: Accepts audio file upload (multipart/form-data) OR JSON text bypass. Returns QueryResponse.
+- POST /tts: Synthesizes spoken audio from text using Sarvam AI Bulbul TTS.
 - GET /health: Healthcheck reporting active languages, index vector counts, and model status.
 - GET /languages: Returns active languages strictly derived from config.LANGUAGES.
 - GET /: Web Demo UI.
 """
 
+import asyncio
+import logging
 import os
 import shutil
 import tempfile
@@ -19,18 +22,31 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 import config
 from pipeline.orchestrator import get_orchestrator, RAGPipelineOrchestrator
 from pipeline.schemas import QueryRequest, QueryResponse
 from retrieval.embed import get_embedder
 from retrieval.index_faiss import get_index_manager
+from stt.sarvam_tts import synthesize_speech
+
+logger = logging.getLogger(__name__)
+
+
+class TTSRequest(BaseModel):
+    """Payload for Text-to-Speech audio generation."""
+    text: str
+    target_language: str = "hi"
+    speaker: Optional[str] = None
+    pace: float = 1.0
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan event handler: Preload embedding models and FAISS indexes ONCE at startup.
+    Lifespan event handler: Preload embedding models, FAISS indexes, and
+    eagerly initialize and warm up the full RAG pipeline orchestrator ONCE at startup.
     Never re-loads per request. Self-heals if indexes are missing or empty.
     """
     print("[API Lifespan] Initializing and pre-loading embedding model...")
@@ -41,10 +57,15 @@ async def lifespan(app: FastAPI):
     
     # Ensure indexes are populated
     for name, idx in index_mgr.indexes.items():
-        print(f"[API Lifespan] Index '{name}': {idx.index.ntotal} vectors loaded.")
+        print(f"[API Lifespan] Index '{name}': {idx.index.ntotal} vectors loaded (configured cap: {config.MAX_INDEX_PASSAGES_PER_LANG}).")
         
+    print("[API Lifespan] Eagerly initializing and warming up RAG orchestrator & ONNX models...")
+    orchestrator = get_orchestrator()
+    print("[API Lifespan] RAG orchestrator warmup complete.")
+    
     print(f"[API Lifespan] Initialized successfully. Active languages: {config.LANGUAGES}")
     print(f"[API Lifespan] Allow Network Calls Switch: {config.ALLOW_NETWORK_CALLS_IN_PIPELINE}")
+    print(f"[API Lifespan] Request Timeout Deadline: {config.REQUEST_TIMEOUT_SECONDS}s")
     
     yield
     
@@ -53,7 +74,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Voice-Enabled Indic RAG API",
-    description="Instrumented low-latency Voice RAG pipeline for Indic languages (Hindi, Tamil, English)",
+    description="Instrumented low-latency Voice RAG pipeline for Indic languages (English, Hindi, Tamil, Marathi)",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -83,8 +104,11 @@ async def health_check() -> Dict[str, Any]:
         "centroids_available": list(index_mgr.centroids.keys()),
         "allow_network_calls": config.ALLOW_NETWORK_CALLS_IN_PIPELINE,
         "sarvam_stt_configured": bool(config.SARVAM_API_KEY),
+        "sarvam_tts_configured": bool(config.SARVAM_API_KEY),
         "llm_fallback_configured": bool(config.LLM_API_KEY and config.ALLOW_NETWORK_CALLS_IN_PIPELINE),
         "semantic_answer_cache_configured": config.SEMANTIC_ANSWER_CACHE_ENABLED,
+        "request_timeout_seconds": config.REQUEST_TIMEOUT_SECONDS,
+        "query_intent_filter_enabled": config.ENABLE_QUERY_INTENT_FILTER,
     }
 
 
@@ -100,18 +124,16 @@ async def get_supported_languages() -> Dict[str, Any]:
     }
 
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
-
 @app.post("/query", response_model=QueryResponse)
 async def query_pipeline(
-    request: Request,
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
     language_hint: Optional[str] = Form(None),
-    cross_lingual: Optional[bool] = Form(True),
+    cross_lingual: Optional[bool] = Form(False),
+    request_body: Optional[QueryRequest] = None,
 ) -> QueryResponse:
     """
-    Execute end-to-end Voice RAG query.
+    Execute end-to-end Voice RAG query with strict deadline timeout protection.
     Accepts:
     1. Multipart file upload ('file') with optional 'language_hint' and 'cross_lingual'
     2. Multipart form text ('text') with optional 'language_hint' and 'cross_lingual'
@@ -121,21 +143,14 @@ async def query_pipeline(
     temp_audio_path = None
     
     try:
-        # 1. Check if request is application/json
-        content_type = request.headers.get("content-type", "")
-        if "application/json" in content_type:
-            try:
-                body_dict = await request.json()
-                req_obj = QueryRequest(**body_dict)
-                return await orchestrator.execute(req_obj)
-            except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid JSON payload: {str(e)}",
-                )
-
+        req: Optional[QueryRequest] = None
+        
+        # 1. Handle JSON request body
+        if request_body and (request_body.text or request_body.audio_path):
+            req = request_body
+            
         # 2. Handle Multipart audio upload
-        if file and file.filename:
+        elif file and file.filename:
             suffix = Path(file.filename).suffix or ".wav"
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                 shutil.copyfileobj(file.file, tmp)
@@ -144,24 +159,38 @@ async def query_pipeline(
             req = QueryRequest(
                 audio_path=temp_audio_path,
                 language_hint=language_hint,
-                cross_lingual=True if cross_lingual is None else cross_lingual,
+                cross_lingual=False if cross_lingual is None else cross_lingual,
             )
-            response = await orchestrator.execute(req)
-            return response
             
         # 3. Handle Multipart Form text bypass
-        if text and text.strip():
+        elif text and text.strip():
             req = QueryRequest(
                 text=text.strip(),
                 language_hint=language_hint,
-                cross_lingual=True if cross_lingual is None else cross_lingual,
+                cross_lingual=False if cross_lingual is None else cross_lingual,
             )
-            return await orchestrator.execute(req)
             
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either 'file' audio upload or 'text' query must be provided.",
-        )
+        if not req:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either 'file' audio upload or 'text' query must be provided.",
+            )
+
+        # Enforce request deadline with asyncio.wait_for
+        try:
+            return await asyncio.wait_for(
+                orchestrator.execute(req),
+                timeout=config.REQUEST_TIMEOUT_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            logger.error(
+                f"Query execution exceeded request deadline timeout ({config.REQUEST_TIMEOUT_SECONDS}s)"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail=f"Request execution exceeded {config.REQUEST_TIMEOUT_SECONDS}s deadline.",
+            )
+            
     finally:
         # Clean up temporary audio file if created
         if temp_audio_path and os.path.exists(temp_audio_path):
@@ -169,6 +198,24 @@ async def query_pipeline(
                 os.remove(temp_audio_path)
             except Exception:
                 pass
+
+
+@app.post("/tts")
+async def generate_speech_audio(req: TTSRequest):
+    """
+    Synthesizes speech audio from text using Sarvam Bulbul TTS.
+    Returns JSON containing audio base64 or fallback status.
+    """
+    try:
+        res = synthesize_speech(
+            text=req.text,
+            language_code=req.target_language,
+            speaker=req.speaker,
+            pace=req.pace,
+        )
+        return res
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/", response_class=HTMLResponse)

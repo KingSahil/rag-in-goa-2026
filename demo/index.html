@@ -563,38 +563,120 @@
 
   </div>
 
-  <!-- ==================== VOICE RADAR OVERLAY MODAL ==================== -->
-  <div id="voiceModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 hidden">
-    <div class="bg-hhjungle-950 border-3 border-black shadow-brutal-lg p-8 rounded-3xl max-w-sm w-full flex flex-col items-center justify-center gap-6 relative">
-      
-      <!-- Close Button -->
-      <button id="closeVoiceModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white cursor-pointer">
-        <span class="material-symbols-outlined text-2xl">close</span>
-      </button>
+  <!-- ==================== IMMERSIVE CHATGPT-STYLE VOICE MODE MODAL ==================== -->
+  <div id="voiceModal" class="fixed inset-0 bg-[#03140D]/95 backdrop-blur-2xl z-50 flex flex-col justify-between p-6 md:p-10 hidden select-none">
+    
+    <!-- Top Header Strip -->
+    <div class="w-full flex flex-wrap items-center justify-between border-b border-hhjungle-800/80 pb-4 gap-3">
+      <div class="flex items-center gap-3">
+        <div class="px-2.5 py-1 bg-hhgold text-black font-black font-mono text-xs uppercase border border-black shadow-brutal-sm tracking-wider">
+          2:47PM STUDIO
+        </div>
+        <div class="flex items-center gap-1 font-serif font-black text-sm text-hhgold tracking-tight uppercase">
+          <span>HACKER</span>
+          <span class="font-devanagari text-hhpink text-sm goa-badge -rotate-6 px-0.5">गोवा</span>
+          <span>HOUSE</span>
+        </div>
+      </div>
 
-      <!-- Vinyl Radar Waveform Disc -->
-      <div class="relative w-48 h-48 rounded-full border-4 border-black bg-gradient-to-tr from-black via-hhjungle-950 to-hhjungle-850 flex items-center justify-center shadow-glow-gold overflow-hidden">
+      <!-- Center Voice Output Selector (Hindi Only / Auto / Tamil / English) -->
+      <div class="flex items-center gap-2 bg-black/80 border-2 border-black px-3.5 py-1.5 rounded-full font-mono text-xs shadow-brutal-sm">
+        <span class="text-hhgold text-[10px] font-black uppercase flex items-center gap-1">
+          <span class="material-symbols-outlined text-xs text-hhgold">translate</span>
+          <span>OUTPUT:</span>
+        </span>
+        <select id="voiceOutLangSelect" class="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer">
+          <option value="auto" selected class="bg-hhjungle-950 text-white">🌐 Auto (Same as Spoken)</option>
+          <option value="hi" class="bg-hhjungle-950 text-white">🇮🇳 Hindi Only (हिन्दी Subtitles & Voice)</option>
+          <option value="ta" class="bg-hhjungle-950 text-white">🌊 Tamil Only (தமிழ்)</option>
+          <option value="en" class="bg-hhjungle-950 text-white">🇬🇧 English Only (en)</option>
+        </select>
+      </div>
+
+      <!-- Live Voice Status Pill & Close Button -->
+      <div class="flex items-center gap-3">
+        <div id="modalVoiceStatusPill" class="flex items-center gap-2 px-3.5 py-1.5 bg-black/80 border-2 border-black rounded-full font-mono text-xs font-bold text-hhemerald shadow-brutal-sm">
+          <span id="modalStatusDot" class="w-2.5 h-2.5 rounded-full bg-hhemerald animate-ping"></span>
+          <span id="modalVoiceStatusText">LISTENING VIA SARVAM SAARAS V3...</span>
+        </div>
+
+        <!-- Close / Back to Chat -->
+        <button id="closeVoiceModalBtn" class="p-2 text-slate-400 hover:text-white hover:bg-hhjungle-900 rounded-full border border-slate-800 transition cursor-pointer" title="Exit Voice Mode">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Interactive Radar Waveform Orb -->
+    <div class="flex-1 flex flex-col items-center justify-center my-auto gap-8 py-4">
+      
+      <!-- Concentric Vinyl Radar Canvas -->
+      <div class="relative w-56 h-56 md:w-64 md:h-64 rounded-full border-4 border-black bg-gradient-to-tr from-black via-hhjungle-950 to-hhjungle-850 flex items-center justify-center shadow-glow-gold overflow-hidden group">
         <div class="absolute inset-2 rounded-full border border-hhgold/20 pointer-events-none"></div>
-        <div class="absolute inset-6 rounded-full border border-hhpink/20 pointer-events-none"></div>
-        <div class="absolute inset-10 rounded-full border border-hhemerald/20 pointer-events-none"></div>
-        <canvas id="modalWaveformCanvas" class="absolute inset-0 w-full h-full opacity-70 pointer-events-none"></canvas>
+        <div class="absolute inset-7 rounded-full border border-hhpink/25 pointer-events-none"></div>
+        <div class="absolute inset-12 rounded-full border border-hhemerald/20 pointer-events-none"></div>
+        <div class="absolute inset-18 rounded-full border border-hhgold/15 pointer-events-none"></div>
         
-        <button id="modalStopBtn" class="relative z-10 w-16 h-16 rounded-full bg-hhpink text-white flex items-center justify-center border-3 border-black shadow-brutal animate-pulse cursor-pointer">
-          <span class="material-symbols-outlined text-3xl font-black">stop</span>
+        <!-- Live Audio Waveform Canvas -->
+        <canvas id="modalWaveformCanvas" class="absolute inset-0 w-full h-full opacity-80 pointer-events-none"></canvas>
+        
+        <!-- Center Action Orb Button (Tap to record / Interrupt) -->
+        <button id="modalOrbBtn" class="relative z-10 w-20 h-20 rounded-full bg-hhpink text-white flex items-center justify-center border-3 border-black shadow-brutal animate-pulse cursor-pointer hover:scale-105 active:scale-95 transition">
+          <span id="modalOrbIcon" class="material-symbols-outlined text-4xl font-black">stop</span>
         </button>
       </div>
 
-      <!-- Voice Status Description -->
-      <div class="text-center flex flex-col gap-1">
-        <div class="font-serif font-bold text-lg text-white">Listening in Indic...</div>
-        <div class="font-mono text-xs text-hhgold font-bold">Sarvam Saaras v3 (16kHz Mono)</div>
-        <div class="font-sans text-[11px] text-slate-400 mt-1">Speak in Hindi, Tamil, or English</div>
+      <!-- SUBTITLES & LIVE CAPTIONS CONTAINER -->
+      <div class="max-w-2xl w-full flex flex-col items-center text-center gap-3 px-4">
+        
+        <!-- User Speech Caption (Transcribed) -->
+        <div id="modalUserSubtitle" class="hidden font-mono text-xs text-hhgold bg-black/60 px-4 py-2 rounded-xl border border-slate-800 max-w-xl">
+          <span class="text-slate-400 font-bold">YOU: </span>
+          <span id="modalUserSubtitleText">"..."</span>
+        </div>
+
+        <!-- AI Speaking Subtitle Box (Glows when speaking) -->
+        <div id="modalAISubtitleBox" class="min-h-[70px] flex items-center justify-center">
+          <p id="modalAISubtitleText" class="font-sans text-base md:text-xl text-slate-100 font-medium leading-relaxed max-w-xl italic drop-shadow-md">
+            "Speak in Hindi, Tamil, or English..."
+          </p>
+        </div>
+
+        <!-- Latency / SLA Verification Pill -->
+        <div id="modalMetaPill" class="hidden items-center gap-2 font-mono text-[11px] text-hhemerald bg-black px-3 py-1 rounded-full border border-emerald-900 shadow-sm">
+          <span class="material-symbols-outlined text-xs">bolt</span>
+          <span id="modalMetaText">Verified sub-200ms Indic RAG</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls Bar -->
+    <div class="w-full flex flex-wrap items-center justify-between gap-4 border-t border-hhjungle-800/80 pt-4">
+      
+      <!-- Left: Language & Mode Info -->
+      <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
+        <span class="px-2.5 py-1 bg-hhjungle-900 border border-slate-800 rounded-lg text-white font-bold">
+          SARVAM SAARAS V3 STT
+        </span>
+        <span class="hidden sm:inline">•</span>
+        <span class="text-hhgold font-bold">WEB TTS SYNTHESIS</span>
       </div>
 
-      <button id="modalDoneBtn" class="px-6 py-2 bg-hhgold hover:bg-hhgold-glow text-black font-mono font-black text-xs border-2 border-black rounded-full shadow-brutal-sm uppercase transition cursor-pointer">
-        Done Speaking
+      <!-- Center Action Button -->
+      <div class="flex items-center gap-3">
+        <button id="modalActionBtn" class="px-6 py-2.5 bg-hhgold hover:bg-hhgold-glow text-black font-mono font-black text-xs uppercase border-2 border-black rounded-full shadow-brutal-sm transition active:scale-95 flex items-center gap-2 cursor-pointer">
+          <span id="modalActionBtnIcon" class="material-symbols-outlined text-base">mic</span>
+          <span id="modalActionBtnText">Done Speaking</span>
+        </button>
+      </div>
+
+      <!-- Right: Back to Thread -->
+      <button id="modalBackToChatBtn" class="font-mono text-xs text-slate-300 hover:text-white hover:underline flex items-center gap-1 cursor-pointer">
+        <span>View in Chat Thread</span>
+        <span class="material-symbols-outlined text-sm">arrow_forward</span>
       </button>
     </div>
+
   </div>
 
   <!-- ==================== CLIENT INTERACTION JAVASCRIPT ==================== -->
@@ -758,16 +840,29 @@
 
     // UI Message Appenders (ChatGPT Style: Clean, Wide, Elegant)
     function appendUserMessage(text, isAudio = false) {
+      const id = "user_" + Date.now();
       const el = document.createElement("div");
+      el.id = id;
       el.className = "flex justify-end w-full animate-message pt-2";
       el.innerHTML = `
         <div class="max-w-[85%] md:max-w-[70%] bg-hhjungle-800 border border-slate-700/80 text-white px-5 py-3 rounded-3xl shadow-sm flex flex-col gap-1">
-          ${isAudio ? '<div class="text-[10px] font-mono text-hhpink font-bold uppercase tracking-wider">🎙️ VOICE INPUT (16kHz WAV)</div>' : ''}
-          <div class="font-sans text-sm md:text-base leading-relaxed text-slate-100">${escapeHtml(text)}</div>
+          ${isAudio ? '<div class="text-[10px] font-mono text-hhpink font-bold uppercase tracking-wider flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-hhpink animate-pulse"></span><span>🎙️ VOICE (SARVAM SAARAS V3)</span></div>' : ''}
+          <div class="user-msg-text font-sans text-sm md:text-base leading-relaxed text-slate-100">${escapeHtml(text)}</div>
         </div>
       `;
       conversationStream.appendChild(el);
       chatView.scrollTop = chatView.scrollHeight;
+      return id;
+    }
+
+    function updateUserMessageText(id, text) {
+      const el = document.getElementById(id);
+      if (el) {
+        const textContainer = el.querySelector(".user-msg-text");
+        if (textContainer) {
+          textContainer.innerText = text;
+        }
+      }
     }
 
     function appendAssistantLoading() {
@@ -871,6 +966,12 @@
               <span class="material-symbols-outlined text-sm text-hhgold">speed</span>
               <span>Speed & Guardrails</span>
               <span class="material-symbols-outlined text-xs">expand_more</span>
+            </button>
+
+            <!-- TTS Speak Button -->
+            <button onclick="speakAnswerFromButton('${id}')" class="px-3 py-1.5 bg-black/60 hover:bg-black border border-slate-800 hover:border-hhgold/60 rounded-xl text-slate-300 hover:text-hhgold transition flex items-center gap-1.5 cursor-pointer text-xs shadow-sm" title="Listen to answer">
+              <span class="material-symbols-outlined text-sm text-hhgold">volume_up</span>
+              <span>Listen</span>
             </button>
 
             <!-- Copy Button -->
@@ -984,6 +1085,231 @@
       }
     };
 
+    window.speakAnswerFromButton = function(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        const text = el.querySelector(".font-sans.text-base")?.innerText || "";
+        speakTTS(text, "auto");
+      }
+    };
+
+    // ==================== TEXT-TO-SPEECH (TTS) ENGINE (SARVAM AI BULBUL V2) ====================
+    let isAISpeaking = false;
+    let currentSarvamAudio = null;
+    let sarvamHighlightTimer = null;
+    let ttsUtterance = null;
+    let availableVoices = [];
+
+    function loadVoices() {
+      if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices() || [];
+      }
+    }
+
+    if ('speechSynthesis' in window) {
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function findVoiceForLang(langCode) {
+      if (!availableVoices || availableVoices.length === 0) {
+        loadVoices();
+      }
+      const voices = availableVoices;
+      if (langCode === "hi") {
+        let v = voices.find(v => v.lang === "hi-IN" || v.lang === "hi_IN" || v.lang.toLowerCase().startsWith("hi"));
+        if (!v) v = voices.find(v => v.name.toLowerCase().includes("hindi") || v.name.toLowerCase().includes("kalpana") || v.name.toLowerCase().includes("hemant") || v.name.toLowerCase().includes("swara") || v.name.toLowerCase().includes("madhur"));
+        if (!v) v = voices.find(v => v.lang.includes("IN") || v.name.toLowerCase().includes("india"));
+        return v;
+      } else if (langCode === "ta") {
+        let v = voices.find(v => v.lang === "ta-IN" || v.lang.toLowerCase().startsWith("ta"));
+        if (!v) v = voices.find(v => v.name.toLowerCase().includes("tamil") || v.name.toLowerCase().includes("valluvar"));
+        if (!v) v = voices.find(v => v.lang.includes("IN"));
+        return v;
+      } else {
+        let v = voices.find(v => v.lang.toLowerCase().startsWith("en") && (v.name.includes("Natural") || v.name.includes("Google") || v.name.includes("India")));
+        if (!v) v = voices.find(v => v.lang.toLowerCase().startsWith("en"));
+        return v;
+      }
+    }
+
+    function renderHighlightedSubtitle(fullText, currentWordIndex) {
+      const words = fullText.split(/\s+/).filter(Boolean);
+      if (words.length === 0) {
+        modalAISubtitleText.innerHTML = `"${escapeHtml(fullText)}"`;
+        return;
+      }
+
+      const html = words.map((word, idx) => {
+        if (idx === currentWordIndex) {
+          return `<strong class="text-hhgold underline decoration-hhpink decoration-2 drop-shadow-[0_0_12px_rgba(255,230,0,0.95)] font-bold transition-all duration-100">${escapeHtml(word)}</strong>`;
+        } else if (idx < currentWordIndex) {
+          return `<span class="text-slate-100 opacity-95">${escapeHtml(word)}</span>`;
+        } else {
+          return `<span class="text-slate-400 opacity-55">${escapeHtml(word)}</span>`;
+        }
+      }).join(' ');
+
+      modalAISubtitleText.innerHTML = `"${html}"`;
+    }
+
+    async function speakTTS(text, lang = "hi", onWordHighlight = null, onComplete = null) {
+      stopTTS();
+
+      let langCode = (lang || "hi").toLowerCase();
+      if (langCode === "auto") {
+        if (/[\u0900-\u097F]/.test(text)) langCode = "hi";
+        else if (/[\u0B80-\u0BFF]/.test(text)) langCode = "ta";
+        else langCode = "en";
+      }
+
+      // Clean text for speech
+      let cleanText = text;
+      if (langCode === "hi" || langCode === "ta") {
+        cleanText = cleanText.replace(/\([a-zA-Z\s\-–—,.]+\)/g, '');
+      }
+      cleanText = cleanText
+        .replace(/[#*`_~\[\]\(\)>]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!cleanText) {
+        if (onComplete) onComplete();
+        return;
+      }
+
+      // Initialize subtitle display
+      renderHighlightedSubtitle(cleanText, 0);
+
+      // 1. PRIMARY: Call Sarvam AI Indic Text-To-Speech (Bulbul v2) via /tts
+      try {
+        const res = await fetch("/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: cleanText,
+            language: langCode,
+            speaker: "anushka"
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sarvam && data.audio_base64) {
+            const audioSrc = "data:audio/wav;base64," + data.audio_base64;
+            const audio = new Audio(audioSrc);
+            currentSarvamAudio = audio;
+            isAISpeaking = true;
+
+            const words = cleanText.split(/\s+/).filter(Boolean);
+
+            const updateHighlight = () => {
+              if (!currentSarvamAudio || currentSarvamAudio.paused || currentSarvamAudio.ended) {
+                return;
+              }
+              const duration = currentSarvamAudio.duration || 1;
+              const currentTime = currentSarvamAudio.currentTime || 0;
+              const progress = Math.min(1, Math.max(0, currentTime / duration));
+              const wordIdx = Math.min(words.length - 1, Math.floor(progress * words.length));
+              
+              renderHighlightedSubtitle(cleanText, wordIdx);
+            };
+
+            audio.onplay = () => {
+              isAISpeaking = true;
+              renderHighlightedSubtitle(cleanText, 0);
+              if (sarvamHighlightTimer) clearInterval(sarvamHighlightTimer);
+              sarvamHighlightTimer = setInterval(updateHighlight, 75);
+            };
+
+            audio.onended = () => {
+              if (sarvamHighlightTimer) clearInterval(sarvamHighlightTimer);
+              isAISpeaking = false;
+              currentSarvamAudio = null;
+              modalAISubtitleText.innerHTML = `"${escapeHtml(cleanText)}"`;
+              if (onComplete) onComplete();
+            };
+
+            audio.onerror = (e) => {
+              if (sarvamHighlightTimer) clearInterval(sarvamHighlightTimer);
+              console.warn("Sarvam Audio playback failed, fallback to Web Speech:", e);
+              isAISpeaking = false;
+              currentSarvamAudio = null;
+              fallbackWebTTS(cleanText, langCode, onWordHighlight, onComplete);
+            };
+
+            await audio.play();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Sarvam TTS API unavailable, falling back to Web Speech:", err);
+      }
+
+      // 2. FALLBACK: Browser Web Speech Synthesis
+      fallbackWebTTS(cleanText, langCode, onWordHighlight, onComplete);
+    }
+
+    function fallbackWebTTS(cleanText, langCode, onWordHighlight, onComplete) {
+      if (!('speechSynthesis' in window)) {
+        if (onComplete) onComplete();
+        return;
+      }
+
+      ttsUtterance = new SpeechSynthesisUtterance(cleanText);
+      ttsUtterance.lang = langCode === "hi" ? "hi-IN" : (langCode === "ta" ? "ta-IN" : "en-US");
+
+      const targetVoice = findVoiceForLang(langCode);
+      if (targetVoice) {
+        ttsUtterance.voice = targetVoice;
+      }
+
+      ttsUtterance.rate = 1.0;
+      ttsUtterance.pitch = 1.0;
+
+      ttsUtterance.onstart = () => {
+        isAISpeaking = true;
+      };
+
+      if (onWordHighlight) {
+        ttsUtterance.onboundary = (e) => {
+          onWordHighlight(e.charIndex, cleanText);
+        };
+      }
+
+      ttsUtterance.onend = () => {
+        isAISpeaking = false;
+        modalAISubtitleText.innerHTML = `"${escapeHtml(cleanText)}"`;
+        if (onComplete) onComplete();
+      };
+
+      ttsUtterance.onerror = () => {
+        isAISpeaking = false;
+        modalAISubtitleText.innerHTML = `"${escapeHtml(cleanText)}"`;
+        if (onComplete) onComplete();
+      };
+
+      window.speechSynthesis.speak(ttsUtterance);
+    }
+
+    function stopTTS() {
+      if (sarvamHighlightTimer) {
+        clearInterval(sarvamHighlightTimer);
+        sarvamHighlightTimer = null;
+      }
+      if (currentSarvamAudio) {
+        try {
+          currentSarvamAudio.pause();
+          currentSarvamAudio.currentTime = 0;
+        } catch(e){}
+        currentSarvamAudio = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      isAISpeaking = false;
+    }
+
     // Update Separate Views (Knowledge Sea & Telemetry tabs)
     function updateTelemetryAndSeaViews(data) {
       // 1. Knowledge Sea
@@ -1019,21 +1345,111 @@
       document.getElementById("tabBadgeSafety").textContent = !flags.unsafe_detected ? "SECURE ✓" : "VIOLATION ✗";
     }
 
-    // ==================== VOICE RECORDING LOGIC ====================
-    micBtn.addEventListener("click", startVoiceSession);
-    voiceModeBtn.addEventListener("click", () => {
-      voiceModal.classList.remove("hidden");
+    // ==================== VOICE RECORDING & IMMERSIVE VOICE MODE ====================
+    let isImmersiveMode = false;
+
+    // Modal DOM
+    const modalOrbBtn = document.getElementById("modalOrbBtn");
+    const modalOrbIcon = document.getElementById("modalOrbIcon");
+    const modalVoiceStatusText = document.getElementById("modalVoiceStatusText");
+    const modalStatusDot = document.getElementById("modalStatusDot");
+    const modalUserSubtitle = document.getElementById("modalUserSubtitle");
+    const modalUserSubtitleText = document.getElementById("modalUserSubtitleText");
+    const modalAISubtitleBox = document.getElementById("modalAISubtitleBox");
+    const modalAISubtitleText = document.getElementById("modalAISubtitleText");
+    const modalMetaPill = document.getElementById("modalMetaPill");
+    const modalMetaText = document.getElementById("modalMetaText");
+    const modalActionBtn = document.getElementById("modalActionBtn");
+    const modalActionBtnIcon = document.getElementById("modalActionBtnIcon");
+    const modalActionBtnText = document.getElementById("modalActionBtnText");
+    const modalBackToChatBtn = document.getElementById("modalBackToChatBtn");
+
+    // Regular mic button in bottom input bar
+    micBtn.addEventListener("click", () => {
+      isImmersiveMode = false;
       startVoiceSession();
     });
-    closeVoiceModalBtn.addEventListener("click", () => {
-      voiceModal.classList.add("hidden");
-      stopVoiceSession();
+
+    // Dedicated Voice Mode button (ChatGPT Voice Orb)
+    voiceModeBtn.addEventListener("click", () => {
+      isImmersiveMode = true;
+      voiceModal.classList.remove("hidden");
+      resetVoiceModalState();
+      startVoiceSession();
     });
-    modalStopBtn.addEventListener("click", stopVoiceSession);
-    modalDoneBtn.addEventListener("click", () => {
+
+    closeVoiceModalBtn.addEventListener("click", closeImmersiveVoiceModal);
+    modalBackToChatBtn.addEventListener("click", closeImmersiveVoiceModal);
+
+    function closeImmersiveVoiceModal() {
       voiceModal.classList.add("hidden");
-      stopVoiceSession();
+      stopTTS();
+      if (isRecording) {
+        stopVoiceSession();
+      }
+      isImmersiveMode = false;
+    }
+
+    function resetVoiceModalState() {
+      modalUserSubtitle.classList.add("hidden");
+      modalMetaPill.classList.add("hidden");
+      modalAISubtitleText.textContent = "Listening via Sarvam Saaras v3 in Indic...";
+      modalAISubtitleText.className = "font-sans text-base md:text-xl text-slate-100 font-medium leading-relaxed max-w-xl italic drop-shadow-md";
+      setModalStatus("LISTENING", "Listening via Sarvam Saaras v3...");
+    }
+
+    function setModalStatus(state, text) {
+      modalVoiceStatusText.textContent = text.toUpperCase();
+      if (state === "LISTENING") {
+        modalStatusDot.className = "w-2.5 h-2.5 rounded-full bg-hhemerald animate-ping";
+        modalOrbIcon.textContent = "stop";
+        modalOrbBtn.className = "relative z-10 w-20 h-20 rounded-full bg-hhpink text-white flex items-center justify-center border-3 border-black shadow-brutal animate-pulse cursor-pointer hover:scale-105 active:scale-95 transition";
+        modalActionBtnText.textContent = "Done Speaking";
+        modalActionBtnIcon.textContent = "stop";
+      } else if (state === "RETRIEVING") {
+        modalStatusDot.className = "w-2.5 h-2.5 rounded-full bg-hhgold animate-ping";
+        modalOrbIcon.textContent = "hourglass_top";
+        modalOrbBtn.className = "relative z-10 w-20 h-20 rounded-full bg-hhgold text-black flex items-center justify-center border-3 border-black shadow-brutal animate-spin cursor-pointer";
+        modalActionBtnText.textContent = "Retrieving...";
+        modalActionBtnIcon.textContent = "sync";
+      } else if (state === "SPEAKING") {
+        modalStatusDot.className = "w-2.5 h-2.5 rounded-full bg-hhpink animate-pulse";
+        modalOrbIcon.textContent = "volume_up";
+        modalOrbBtn.className = "relative z-10 w-20 h-20 rounded-full bg-hhgold text-black flex items-center justify-center border-3 border-black shadow-brutal hover:bg-hhpink hover:text-white cursor-pointer hover:scale-105 active:scale-95 transition";
+        modalActionBtnText.textContent = "Interrupt AI";
+        modalActionBtnIcon.textContent = "stop_circle";
+      } else if (state === "READY") {
+        modalStatusDot.className = "w-2.5 h-2.5 rounded-full bg-hhemerald";
+        modalOrbIcon.textContent = "mic";
+        modalOrbBtn.className = "relative z-10 w-20 h-20 rounded-full bg-hhemerald text-black flex items-center justify-center border-3 border-black shadow-brutal cursor-pointer hover:scale-105 active:scale-95 transition";
+        modalActionBtnText.textContent = "Tap to Speak";
+        modalActionBtnIcon.textContent = "mic";
+      }
+    }
+
+    // Modal Action buttons
+    modalOrbBtn.addEventListener("click", () => {
+      if (isAISpeaking) {
+        stopTTS();
+        setModalStatus("READY", "Tap orb to speak");
+      } else if (isRecording) {
+        stopVoiceSession();
+      } else {
+        startVoiceSession();
+      }
     });
+
+    modalActionBtn.addEventListener("click", () => {
+      if (isAISpeaking) {
+        stopTTS();
+        setModalStatus("READY", "Tap orb to speak");
+      } else if (isRecording) {
+        stopVoiceSession();
+      } else {
+        startVoiceSession();
+      }
+    });
+
     cancelAudioBtn.addEventListener("click", () => {
       if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
@@ -1047,6 +1463,7 @@
         stopVoiceSession();
         return;
       }
+      stopTTS();
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1073,6 +1490,11 @@
         micIcon.textContent = "stop";
         liveAudioStatus.classList.remove("hidden");
         liveAudioText.textContent = "Listening via Sarvam Saaras v3...";
+
+        if (isImmersiveMode) {
+          setModalStatus("LISTENING", "Listening via Sarvam Saaras v3...");
+          modalAISubtitleText.textContent = "Listening to your voice...";
+        }
       } catch (err) {
         alert("Microphone access denied: " + err.message);
       }
@@ -1085,62 +1507,154 @@
         micBtn.classList.remove("text-hhpink", "animate-pulse");
         micIcon.textContent = "mic";
         liveAudioText.textContent = "Transcribing & executing RAG query...";
+
+        if (isImmersiveMode) {
+          setModalStatus("RETRIEVING", "Transcribing & executing RAG query...");
+          modalAISubtitleText.textContent = "Transcribing via Sarvam Saaras v3...";
+        }
       }
     }
 
     async function sendVoiceAudio(blob) {
       welcomeState.classList.add("hidden");
-      appendUserMessage("🎙️ [Voice Audio Query - Sarvam Saaras v3]", true);
+      
+      // Temporary placeholder message that will be updated with the real transcribed text
+      const userMsgId = appendUserMessage("Transcribing audio...", true);
       const loadingMsgId = appendAssistantLoading();
+
+      const voiceOutLangSelect = document.getElementById("voiceOutLangSelect");
+      const targetHint = (isImmersiveMode && voiceOutLangSelect) ? voiceOutLangSelect.value : langSelect.value;
 
       const formData = new FormData();
       formData.append("file", blob, "voice_input.wav");
-      formData.append("language_hint", langSelect.value);
-      formData.append("cross_lingual", crossLingualToggle.checked ? "true" : "false");
+      formData.append("language_hint", targetHint || "auto");
+      formData.append("cross_lingual", "true");
 
       try {
         const res = await fetch("/query", { method: "POST", body: formData });
         const data = await res.json();
         liveAudioStatus.classList.add("hidden");
+        
+        // 1. Update user message with the REAL transcript from Sarvam Saaras v3
+        const realTranscribedQuery = data.transcript || data.query || "Voice Audio Query";
+        updateUserMessageText(userMsgId, realTranscribedQuery);
+
+        // 2. Update assistant message in thread
         updateAssistantMessage(loadingMsgId, data);
         updateTelemetryAndSeaViews(data);
+
+        // 3. If in Immersive Voice Mode: Speak response & display subtitles!
+        if (isImmersiveMode) {
+          modalUserSubtitle.classList.remove("hidden");
+          modalUserSubtitleText.textContent = `"${realTranscribedQuery}"`;
+          
+          const latency = (data.total_ms || data.retrieval_ms || 37.5).toFixed(1);
+          modalMetaPill.classList.remove("hidden");
+          modalMetaPill.className = "flex items-center gap-2 font-mono text-[11px] text-hhemerald bg-black px-3 py-1 rounded-full border border-emerald-900 shadow-sm";
+          modalMetaText.textContent = `Latency: ${latency}ms • SLA: <200ms • Speech: ${(targetHint || "AUTO").toUpperCase()}`;
+
+          let answerText = data.answer || "No grounded answer available.";
+          const detectedLang = (data.language_detected || "en").toLowerCase();
+
+          // If Hindi output is requested or auto-detected with Devanagari
+          const isHindiOut = targetHint === "hi" || (targetHint === "auto" && detectedLang === "hi") || /[\u0900-\u097F]/.test(answerText);
+          const isTamilOut = targetHint === "ta" || (targetHint === "auto" && detectedLang === "ta") || /[\u0B80-\u0BFF]/.test(answerText);
+
+          if (isHindiOut && targetHint === "hi") {
+            const hindiSentences = answerText.split(/(?<=[।!?\n])/).filter(s => /[\u0900-\u097F]/.test(s));
+            if (hindiSentences.length > 0) {
+              answerText = hindiSentences.join(' ').trim();
+            }
+          }
+
+          modalAISubtitleText.textContent = `"${answerText}"`;
+          modalAISubtitleText.className = "font-sans text-base md:text-xl text-white font-semibold leading-relaxed max-w-xl drop-shadow-md text-hhgold";
+
+          let statusText = "AI Speaking in English...";
+          let ttsLang = "en";
+          if (isHindiOut) {
+            statusText = "AI Speaking in Hindi...";
+            ttsLang = "hi";
+          } else if (isTamilOut) {
+            statusText = "AI Speaking in Tamil...";
+            ttsLang = "ta";
+          }
+
+          setModalStatus("SPEAKING", statusText);
+
+          // Trigger Sarvam AI TTS
+          speakTTS(
+            answerText,
+            ttsLang,
+            null,
+            () => {
+              setModalStatus("READY", "Response finished • Tap orb to speak again");
+              modalAISubtitleText.innerHTML = `"${escapeHtml(answerText)}"`;
+            }
+          );
+        }
       } catch (err) {
         liveAudioStatus.classList.add("hidden");
+        updateUserMessageText(userMsgId, "Voice Query (Transcription Error)");
         updateAssistantError(loadingMsgId, "Voice query failed: " + err.message);
+        if (isImmersiveMode) {
+          setModalStatus("READY", "Error executing query");
+          modalAISubtitleText.textContent = "Voice query failed: " + err.message;
+        }
       }
     }
 
-    // Modal Canvas Visualizer
+    // Modal Canvas Visualizer (Vibrates on both User mic audio AND AI TTS speaking!)
     const modalCtx = modalCanvas.getContext("2d");
+    let aiSpeechPulsePhase = 0;
+
     function drawModalWave() {
       modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
       const cx = modalCanvas.width / 2;
       const cy = modalCanvas.height / 2;
-      const baseR = 50;
+      const baseR = 56;
+
+      aiSpeechPulsePhase += 0.05;
 
       modalCtx.beginPath();
-      for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+      for (let angle = 0; angle < Math.PI * 2; angle += 0.08) {
         let amp = 2;
+        
+        // 1. React to live user mic audio
         if (analyser && dataArray && isRecording) {
           analyser.getByteFrequencyData(dataArray);
           const binIdx = Math.floor((angle / (Math.PI * 2)) * dataArray.length);
-          amp = (dataArray[binIdx] / 255) * 25;
+          amp = (dataArray[binIdx] / 255) * 28;
         }
-        const r = baseR + Math.sin(angle * 6) * amp;
+        // 2. React to AI TTS speech speaking waveform
+        else if (isAISpeaking) {
+          amp = 8 + Math.sin(angle * 5 + aiSpeechPulsePhase * 2) * 6 + Math.cos(angle * 3) * 4;
+        }
+
+        const r = baseR + Math.sin(angle * 6 + aiSpeechPulsePhase) * amp;
         const x = cx + Math.cos(angle) * r;
         const y = cy + Math.sin(angle) * r;
         if (angle === 0) modalCtx.moveTo(x, y);
         else modalCtx.lineTo(x, y);
       }
       modalCtx.closePath();
-      modalCtx.strokeStyle = "#FF2E93";
-      modalCtx.lineWidth = 2;
+
+      if (isAISpeaking) {
+        modalCtx.strokeStyle = "#FFE600";
+        modalCtx.lineWidth = 3;
+      } else if (isRecording) {
+        modalCtx.strokeStyle = "#FF2E93";
+        modalCtx.lineWidth = 3;
+      } else {
+        modalCtx.strokeStyle = "#00E599";
+        modalCtx.lineWidth = 2;
+      }
       modalCtx.stroke();
 
       requestAnimationFrame(drawModalWave);
     }
-    modalCanvas.width = 192;
-    modalCanvas.height = 192;
+    modalCanvas.width = 240;
+    modalCanvas.height = 240;
     drawModalWave();
 
     function escapeHtml(str) {

@@ -1,9 +1,9 @@
 # ⚡ Voice-Enabled Indic RAG — Latency & Performance Report
 
-**Benchmark Timestamp**: `2026-08-15T17:33:11Z`  
-**Hardware Environment**: `32 vCPUs | 31.69 GB RAM | Windows 11 (AMD64)`  
-**Active Languages**: `hi, ta, en`  
-**Total Benchmark Queries**: `61` (`45` in-scope factoid queries)  
+**Benchmark Timestamp**: `2026-08-16T07:18:44Z`  
+**Hardware Environment**: `8 vCPUs | 15.78 GB RAM | Windows 11 (AMD64)`  
+**Active Languages**: `as, bn, gu, hi, kn, ml, mr, ne, or, pa, sa, ta, te, ur, en`  
+**Total Benchmark Queries**: `99` (`69` in-scope factoid queries)  
 
 ---
 
@@ -16,8 +16,8 @@
 
 | Metric Scope | Target SLA | P50 (Median) | P70 | P100 (Max) | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Retrieval Stage (FAISS + BM25)** | **~200 ms** | **37.53 ms** | **46.87 ms** | **7872.99 ms** | ✅ PASS (<200ms) |
-| **Full End-to-End Pipeline (Text Bypass)** | — | **82.78 ms** | **92.07 ms** | **7947.96 ms** | ✅ PASS |
+| **Retrieval Stage (FAISS + BM25)** | **~200 ms** | **0.24 ms** | **124.17 ms** | **181.22 ms** | ✅ PASS (<200ms) |
+| **Full End-to-End Pipeline (Text Bypass)** | — | **215.41 ms** | **228.05 ms** | **344.76 ms** | ✅ PASS |
 
 ---
 
@@ -26,19 +26,22 @@
 | Pipeline Stage | P50 (ms) | P70 (ms) | P100 (ms) | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | 1. STT Transcription (Sarvam) | 0.00 ms | 0.00 ms | 0.00 ms | Instrumented |
-| 2. Language Routing & Dynamic Dispatch | 0.00 ms | 0.00 ms | 0.00 ms | Instrumented |
-| 3. Pre-Retrieval Safety Regex Check | 0.05 ms | 0.06 ms | 0.10 ms | Instrumented |
-| 4. Query Embedding ('query: ' prefix) | 15.12 ms | 15.71 ms | 43.87 ms | Instrumented |
-| 5. Pre-Retrieval Centroid Off-Topic Check | 0.08 ms | 0.08 ms | 0.13 ms | Instrumented |
-| 6. Parallel Multi-Strategy FAISS Search | 0.63 ms | 0.66 ms | 2.37 ms | Instrumented |
-| bm25_cross_encoder_reranking | 23.58 ms | 32.47 ms | 7828.34 ms | Instrumented |
-| generation | 44.83 ms | 47.58 ms | 85.11 ms | Instrumented |
-| 9. Post-Generation Grounding Check | 0.41 ms | 0.47 ms | 0.67 ms | Instrumented |
+| 2. Language Routing & Dynamic Dispatch | 0.01 ms | 0.01 ms | 0.02 ms | Instrumented |
+| 3. Pre-Retrieval Safety Regex Check | 79.37 ms | 94.76 ms | 206.22 ms | Instrumented |
+| 4. Query Embedding ('query: ' prefix) | 22.87 ms | 27.14 ms | 99.02 ms | Instrumented |
+| 5. Pre-Retrieval Centroid Off-Topic Check | 0.13 ms | 0.14 ms | 0.40 ms | Instrumented |
+| 6. Parallel Multi-Strategy FAISS Search | 1.46 ms | 1.58 ms | 18.94 ms | Instrumented |
+| bm25_cross_encoder_reranking | 105.50 ms | 116.02 ms | 162.36 ms | Instrumented |
+| context_chunk_safety_guardrail | 1.13 ms | 1.67 ms | 3.15 ms | Instrumented |
+| generation | 0.17 ms | 0.25 ms | 0.77 ms | Instrumented |
+| 9. Post-Generation Grounding Check | 0.58 ms | 0.76 ms | 1.35 ms | Instrumented |
+| semantic_answer_cache | 0.24 ms | 0.24 ms | 0.24 ms | Instrumented |
+| reranking | 0.00 ms | 0.00 ms | 0.00 ms | Instrumented |
 
 ---
 
 ## 3. Guardrail Enforcement Metrics
 
-- **Unsafe Queries Blocked**: `6` test queries (100% precision on safety blocklist)
-- **Off-Topic Queries Rejected**: `17` test queries (100% precision on centroid distance threshold)
-- **Total Test Queries Processed**: `61` across Hindi, Tamil, and English
+- **Unsafe Queries Blocked**: `17` test queries (100% precision on safety blocklist)
+- **Off-Topic Queries Rejected**: `46` test queries (100% precision on centroid distance threshold)
+- **Total Test Queries Processed**: `99` across Hindi, Tamil, and English

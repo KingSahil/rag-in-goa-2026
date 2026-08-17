@@ -14,7 +14,7 @@ from generation.answer_cache import get_answer_cache
 
 
 def extract_answer_from_passage(
-    query: str, top_passage: Dict[str, Any]
+    query: str, top_passage: Dict[str, Any], target_lang: Optional[str] = None
 ) -> str:
     """
     Extracts the most relevant grounded sentence or full passage as the answer.
@@ -26,9 +26,23 @@ def extract_answer_from_passage(
     sentences = split_sentences_multilingual(text)
     if not sentences:
         return text
+
+    # If target language is Hindi, filter to Hindi sentences if available
+    if target_lang == "hi":
+        hi_sents = [s for s in sentences if re.search(r'[\u0900-\u097F]', s)]
+        if hi_sents:
+            sentences = hi_sents
+    elif target_lang == "ta":
+        ta_sents = [s for s in sentences if re.search(r'[\u0B80-\u0BFF]', s)]
+        if ta_sents:
+            sentences = ta_sents
+    elif target_lang == "mr":
+        mr_sents = [s for s in sentences if re.search(r'[\u0900-\u097F]', s)]
+        if mr_sents:
+            sentences = mr_sents
         
     if len(sentences) <= 2:
-        return text
+        return " ".join(sentences) if len(sentences) > 0 else text
         
     # Find sentence with highest token overlap with query
     query_words = set(re.findall(r'\w+', query.lower(), re.UNICODE))
@@ -53,12 +67,13 @@ def synthesize_textrank_svd(
     query: str,
     candidate_chunks: List[Dict[str, Any]],
     query_vector: Optional[np.ndarray] = None,
+    target_lang: Optional[str] = None,
     embedder: Optional[Any] = None,
     max_sentences: int = 2,
 ) -> str:
     r"""
     Non-LLM Context Synthesis via Continuous TextRank Eigenvector Centrality & SVD Matrix Decomposition:
-    1. Collects unique sentence nodes across top candidate chunks.
+    1. Collects unique sentence nodes across top candidate chunks in target language script.
     2. Builds the sentence similarity adjacency matrix and power-iterates to find graph centrality.
     3. Decomposes embedding matrix via economy SVD (M = U \Sigma V^T) for 95% cumulative energy thresholding.
     4. Sequences top salient sentences in original document order for natural readability.
@@ -66,6 +81,41 @@ def synthesize_textrank_svd(
     if not candidate_chunks:
         return ""
         
+    def matches_target_lang(text: str, lang: Optional[str]) -> bool:
+        if not lang or lang.lower() in ["auto", "unknown", ""]:
+            return True
+        l = lang.lower()
+        if l in ["hi", "mr", "ne", "sa"]:
+            return bool(re.search(r'[\u0900-\u097F]', text))
+        elif l == "ta":
+            return bool(re.search(r'[\u0B80-\u0BFF]', text))
+        elif l == "bn":
+            return bool(re.search(r'[\u0980-\u09FF]', text))
+        elif l == "te":
+            return bool(re.search(r'[\u0C00-\u0C7F]', text))
+        elif l == "kn":
+            return bool(re.search(r'[\u0C80-\u0CFF]', text))
+        elif l == "ml":
+            return bool(re.search(r'[\u0D00-\u0D7F]', text))
+        elif l == "gu":
+            return bool(re.search(r'[\u0A80-\u0AFF]', text))
+        elif l == "pa":
+            return bool(re.search(r'[\u0A00-\u0A7F]', text))
+        elif l == "or":
+            return bool(re.search(r'[\u0B00-\u0B7F]', text))
+        elif l == "en":
+            return bool(re.search(r'[a-zA-Z]', text)) and not bool(re.search(r'[\u0900-\u0D7F]', text))
+        return True
+
+    # Check if target language sentences exist across top chunks
+    has_target_script = False
+    if target_lang:
+        for chunk in candidate_chunks[:5]:
+            t = chunk.get("text", "")
+            if matches_target_lang(t, target_lang):
+                has_target_script = True
+                break
+
     # Gather sentences from top candidate chunks
     candidate_sentences: List[str] = []
     seen_sentences = set()
@@ -77,9 +127,16 @@ def synthesize_textrank_svd(
         sents = split_sentences_multilingual(text)
         for s in sents:
             s_clean = s.strip()
+            # If target script is present in top chunks, filter out mismatched scripts
+            if has_target_script and not matches_target_lang(s_clean, target_lang):
+                continue
             if len(s_clean.split()) >= 3 and s_clean not in seen_sentences:
                 seen_sentences.add(s_clean)
                 candidate_sentences.append(s_clean)
+                if len(candidate_sentences) >= 6:
+                    break
+        if len(candidate_sentences) >= 6:
+            break
                 
     if not candidate_sentences:
         return candidate_chunks[0].get("text", "").strip()
@@ -88,8 +145,7 @@ def synthesize_textrank_svd(
         return " ".join(candidate_sentences)
         
     if embedder is None:
-        # Fallback to token overlap if embedder is not passed
-        return extract_answer_from_passage(query, candidate_chunks[0])
+        return extract_answer_from_passage(query, candidate_chunks[0], target_lang=target_lang)
         
     try:
         # 1. Encode candidate sentences
@@ -106,16 +162,16 @@ def synthesize_textrank_svd(
         r_sum = np.sum(r)
         prior = r / r_sum if r_sum > 1e-6 else np.ones(N) / N
         
-        # 3. Inter-sentence Adjacency matrix
+        # 3. Inter-sentence Adjacency matrix W_ij = max(0, cos(s_i, s_j))
         W = np.maximum(0.0, np.dot(s_vecs, s_vecs.T))
-        np.fill_diagonal(W, 0.0)
+        np.fill_diagonal(W, 0.0)  # No self-loops
         
         # Stochastic degree normalization
         deg = np.sum(W, axis=1)
         deg[deg == 0] = 1.0
         T = W / deg[:, np.newaxis]
         
-        # 4. Continuous TextRank Power Iteration
+        # 4. Continuous TextRank Power Iteration (12 iterations for exact stationary distribution)
         d = 0.85
         p = np.ones(N) / N
         for _ in range(12):
@@ -139,7 +195,7 @@ def synthesize_textrank_svd(
         
         return " ".join([candidate_sentences[i] for i in top_indices])
     except Exception:
-        return extract_answer_from_passage(query, candidate_chunks[0])
+        return extract_answer_from_passage(query, candidate_chunks[0], target_lang=target_lang)
 
 
 def generate_extractive(
@@ -186,24 +242,24 @@ def generate_extractive(
         
     top_chunk = retrieved_chunks[0]
     
-    # Synthesize answer across top candidate chunks using TextRank + SVD
-    if embedder is not None and len(retrieved_chunks) > 0:
-        extracted_text = synthesize_textrank_svd(
+    # 2. Context Synthesis via Continuous TextRank & SVD Matrix Decomposition
+    try:
+        synthesized_text = synthesize_textrank_svd(
             query=query,
-            candidate_chunks=retrieved_chunks[:3],
+            candidate_chunks=retrieved_chunks,
             query_vector=query_vector,
+            target_lang=target_lang,
             embedder=embedder,
             max_sentences=2,
         )
-    else:
-        extracted_text = extract_answer_from_passage(query, top_chunk)
+    except Exception:
+        synthesized_text = extract_answer_from_passage(query, top_chunk, target_lang=target_lang)
         
     confidence = float(top_chunk.get("confidence", top_chunk.get("final_score", top_chunk.get("score", 0.9))))
     
     return {
-        "answer": extracted_text,
+        "answer": synthesized_text or top_chunk.get("text", "").strip(),
         "answer_source": "extractive",
         "source_chunk_id": top_chunk.get("chunk_id"),
         "confidence": confidence,
     }
-
