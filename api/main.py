@@ -100,13 +100,15 @@ async def get_supported_languages() -> Dict[str, Any]:
     }
 
 
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
+
 @app.post("/query", response_model=QueryResponse)
 async def query_pipeline(
+    request: Request,
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
     language_hint: Optional[str] = Form(None),
     cross_lingual: Optional[bool] = Form(True),
-    request_body: Optional[QueryRequest] = None,
 ) -> QueryResponse:
     """
     Execute end-to-end Voice RAG query.
@@ -119,10 +121,19 @@ async def query_pipeline(
     temp_audio_path = None
     
     try:
-        # 1. Handle JSON request body
-        if request_body and (request_body.text or request_body.audio_path):
-            return await orchestrator.execute(request_body)
-            
+        # 1. Check if request is application/json
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
+            try:
+                body_dict = await request.json()
+                req_obj = QueryRequest(**body_dict)
+                return await orchestrator.execute(req_obj)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid JSON payload: {str(e)}",
+                )
+
         # 2. Handle Multipart audio upload
         if file and file.filename:
             suffix = Path(file.filename).suffix or ".wav"
