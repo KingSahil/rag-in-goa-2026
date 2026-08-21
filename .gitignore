@@ -1,10 +1,27 @@
-.venv/
-__pycache__/
-*.pyc
+# Local environment & secrets
 .env
+.env.local
+
+# Virtual environments & dependencies
+.venv/
+venv/
+env/
 node_modules/
 dist/
-indexes/*.faiss
-indexes/*.jsonl
-data/*
-!data/.gitkeep
+
+# Python cache & compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Raw data & scratch downloads
+data/raw/*
+data/onnx_models/*
+!data/raw/.gitkeep
+!data/onnx_models/.gitkeep
+
+# Ensure indexes and processed data are kept for deployment
+!data/indexes/
+!data/processed/
+

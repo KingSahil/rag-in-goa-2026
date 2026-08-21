@@ -50,11 +50,13 @@ except ImportError:
                 return decorator
             return func
 
+from pydantic import BaseModel
 import config
 from pipeline.orchestrator import get_orchestrator
 from pipeline.schemas import QueryRequest, QueryResponse
 from retrieval.embed import get_embedder
 from retrieval.index_faiss import get_index_manager
+from stt.sarvam_tts import synthesize_speech
 
 
 # Read the full custom HTML Command Center UI
@@ -229,6 +231,33 @@ async def query_pipeline(
                 os.remove(temp_audio_path)
             except Exception:
                 pass
+
+
+class TTSRequest(BaseModel):
+    """Payload for Text-to-Speech audio generation."""
+    text: str
+    target_language: str = "hi"
+    speaker: Optional[str] = None
+    pace: float = 1.0
+
+
+@app.post("/tts")
+async def generate_speech_audio(req: TTSRequest):
+    """
+    Synthesizes speech audio from text using Sarvam Bulbul TTS.
+    Returns JSON containing audio base64 or fallback status.
+    """
+    try:
+        res = synthesize_speech(
+            text=req.text,
+            language_code=req.target_language,
+            speaker=req.speaker,
+            pace=req.pace,
+        )
+        return res
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 
 if __name__ == "__main__":
