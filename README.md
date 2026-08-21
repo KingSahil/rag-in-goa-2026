@@ -13,6 +13,13 @@ short_description: Voice Indic RAG with Sub-10ms FAISS Retrieval
 
 # 🌴 Hacker House Goa 2026: Voice-Enabled Multilingual Indic RAG
 
+[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space%20Demo-yellow.svg)](https://huggingface.co/spaces/ansh123456789/ragingoa)
+[![Live Space URL](https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Space-ansh123456789--ragingoa.hf.space-emerald.svg)](https://ansh123456789-ragingoa.hf.space/)
+[![ZeroGPU Ready](https://img.shields.io/badge/ZeroGPU-Enabled-blue.svg)](https://huggingface.co/spaces/ansh123456789/ragingoa)
+
+> **🚀 Live Space URL**: [https://ansh123456789-ragingoa.hf.space](https://ansh123456789-ragingoa.hf.space/)  
+> **📦 Space Repository**: [https://huggingface.co/spaces/ansh123456789/ragingoa](https://huggingface.co/spaces/ansh123456789/ragingoa)
+
 An instrumented, low-latency, voice-enabled Retrieval-Augmented Generation (RAG) system built from scratch for **Indic languages** and **English**, strictly architected for zero-code extension via a single configuration list (`config.LANGUAGES`).
 
 Active runtime deployment is optimized for **3 core languages** (**English [`en`]**, **Hindi [`hi`]**, and **Marathi [`mr`]**) with **148,854 in-memory vectors** (148,545 native passage vectors + 309 semantic longdoc vectors) achieving **~7.04 ms retrieval latency** (p95: 7.97 ms vs 50.0 ms budget), with zero-code extensibility across **all 14 Indic languages** (**Assamese, Bengali, Gujarati, Hindi, Kannada, Malayalam, Marathi, Nepali, Odia, Punjabi, Sanskrit, Tamil, Telugu, Urdu**) and **English** (15 languages total, **~743,000 deduplicated passages**).

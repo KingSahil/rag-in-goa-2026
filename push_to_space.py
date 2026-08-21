@@ -17,7 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 TOKEN = os.getenv("HF_TOKEN")
-REPO_ID = "prosahil/voicegoarag"
+REPO_ID = "ansh123456789/ragingoa"
 ROOT = Path(__file__).resolve().parent
 
 api = HfApi(token=TOKEN)
