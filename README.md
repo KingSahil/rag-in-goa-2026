@@ -13,12 +13,13 @@ short_description: Voice Indic RAG with Sub-10ms FAISS Retrieval
 
 # 🌴 Hacker House Goa 2026: Voice-Enabled Multilingual Indic RAG
 
-[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space%20Demo-yellow.svg)](https://huggingface.co/spaces/ansh123456789/ragingoa)
-[![Live Space URL](https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Space-ansh123456789--ragingoa.hf.space-emerald.svg)](https://ansh123456789-ragingoa.hf.space/)
-[![ZeroGPU Ready](https://img.shields.io/badge/ZeroGPU-Enabled-blue.svg)](https://huggingface.co/spaces/ansh123456789/ragingoa)
+[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space%20Demo-yellow.svg)](https://huggingface.co/spaces/prosahil/voicegoarag)
+[![Live Space URL](https://img.shields.io/badge/%F0%9F%8C%90%20Live%20Space-prosahil--voicegoarag.hf.space-emerald.svg)](https://prosahil-voicegoarag.hf.space/)
+[![ZeroGPU Ready](https://img.shields.io/badge/ZeroGPU-Enabled-blue.svg)](https://huggingface.co/spaces/prosahil/voicegoarag)
 
-> **🚀 Live Space URL**: [https://ansh123456789-ragingoa.hf.space](https://ansh123456789-ragingoa.hf.space/)  
-> **📦 Space Repository**: [https://huggingface.co/spaces/ansh123456789/ragingoa](https://huggingface.co/spaces/ansh123456789/ragingoa)
+> **🚀 Live Space URL**: [https://prosahil-voicegoarag.hf.space](https://prosahil-voicegoarag.hf.space/)  
+> **📦 Space Repository**: [https://huggingface.co/spaces/prosahil/voicegoarag](https://huggingface.co/spaces/prosahil/voicegoarag)
+
 
 An instrumented, low-latency, voice-enabled Retrieval-Augmented Generation (RAG) system built from scratch for **Indic languages** and **English**, strictly architected for zero-code extension via a single configuration list (`config.LANGUAGES`).
 
@@ -370,31 +371,32 @@ pytest tests/ -v
 
 ## 🚀 Hugging Face Space Deployment
 
-The system is deployed on Hugging Face Spaces using the **Docker SDK**:
-- **Live Space URL**: [https://ansh123456789-ragingoa.hf.space](https://ansh123456789-ragingoa.hf.space)
-- **Space Repository**: [https://huggingface.co/spaces/ansh123456789/ragingoa](https://huggingface.co/spaces/ansh123456789/ragingoa)
+The system is deployed on Hugging Face Spaces with **ZeroGPU acceleration** (`zero-a10g`):
+- **Live Space URL**: [https://prosahil-voicegoarag.hf.space](https://prosahil-voicegoarag.hf.space)
+- **Space Repository**: [https://huggingface.co/spaces/prosahil/voicegoarag](https://huggingface.co/spaces/prosahil/voicegoarag)
 
-### 1. Space Hardware & Cold-Start Properties
-- **Hardware Profile**: Free `cpu-basic` (2 vCPU / 16 GB RAM).
+### 1. Space Hardware & ZeroGPU Acceleration
+- **Hardware Profile**: ZeroGPU (`zero-a10g` Blackwell 48GB MIG partition).
 - **Cold-Start Platform Property**:
   > [!NOTE]
-  > Free `cpu-basic` Spaces sleep after 48 hours of inactivity. The initial wake request will experience a **30–90 second platform container spin-up time**. Once warm, the in-memory retrieval pipeline responds in **~7–16 ms**.
+  > Free ZeroGPU Spaces sleep after 48 hours of inactivity. The initial wake request will experience a quick container spin-up time. Once warm, the in-memory retrieval pipeline responds in **~7–16 ms**.
 
 ### 2. Environment Secrets Configuration
 In your Space dashboard under **Settings -> Variables and Secrets**, configure:
-- `SARVAM_API_KEY`: Your Sarvam AI Saaras v3 API subscription key.
-- `LLM_API_KEY`: Your OpenAI/Groq API key for multi-source cross-lingual synthesis.
-- `LLM_BASE_URL`: API Base URL (e.g. `https://api.groq.com/openai/v1` or `https://api.openai.com/v1`).
-- `LLM_MODEL`: Model identifier (e.g. `llama-3.3-70b-versatile` or `gpt-4o-mini`).
+- `SARVAM_API_KEY`: Your Sarvam AI Saaras v3 STT & Bulbul v2 TTS subscription key.
+- `LLM_API_KEY`: (Optional) Your OpenAI/Groq API key for multi-source cross-lingual generative fallback.
+- `LLM_BASE_URL`: (Optional) API Base URL (e.g. `https://api.groq.com/openai/v1` or `https://api.openai.com/v1`).
+- `LLM_MODEL`: (Optional) Model identifier (e.g. `llama-3.3-70b-versatile` or `gpt-4o-mini`).
 
 ### 3. Reproducible Push-to-Space Steps
 ```bash
 # 1. Add Hugging Face Space remote
-git remote add space https://huggingface.co/spaces/ansh123456789/ragingoa
+git remote add space https://huggingface.co/spaces/prosahil/voicegoarag
 
-# 2. Push artifacts (Dockerfile, code, pre-built FAISS indexes) to Space
+# 2. Push artifacts (app.py, code, pre-built FAISS indexes) to Space
 git push space main
 ```
+
 
 ---
 
