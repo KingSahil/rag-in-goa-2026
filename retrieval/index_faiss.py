@@ -404,8 +404,57 @@ class IndexManager:
             counts[lang] = counts.get(lang, 0) + 1
         self._save_centroids(sums, counts)
 
+    def _ensure_lfs_files_resolved(self):
+        """
+        Checks if index or cache artifacts are Git LFS pointer files and resolves them via Hugging Face Hub.
+        """
+        import os
+        from huggingface_hub import hf_hub_download
+        import shutil
+
+        space_repo_id = os.getenv("SPACE_ID") or "prosahil/voicegoarag"
+        token = os.getenv("HF_TOKEN")
+        
+        needed_files = [
+            "data/indexes/passage_native.faiss",
+            "data/indexes/passage_native_meta.json",
+            "data/indexes/semantic_longdoc.faiss",
+            "data/indexes/semantic_longdoc_meta.json",
+            "data/indexes/centroids.json",
+            "data/indexes/answer_cache.npz",
+            "data/indexes/answer_cache_meta.json",
+        ]
+        
+        base_dir = config.BASE_DIR
+        for rel_path in needed_files:
+            local_p = base_dir / rel_path
+            is_pointer = False
+            if local_p.exists() and local_p.stat().st_size < 1024:
+                try:
+                    head = local_p.read_text(encoding="utf-8", errors="ignore")
+                    if head.startswith("version https://git-lfs"):
+                        is_pointer = True
+                except Exception:
+                    pass
+                    
+            if not local_p.exists() or is_pointer:
+                logger.info(f"Downloading real LFS blob for '{rel_path}' from Hub '{space_repo_id}'...")
+                try:
+                    downloaded = hf_hub_download(
+                        repo_id=space_repo_id,
+                        repo_type="space",
+                        filename=rel_path,
+                        token=token,
+                    )
+                    local_p.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(downloaded, str(local_p))
+                    logger.info(f"Resolved LFS blob for '{rel_path}' ({local_p.stat().st_size / (1024*1024):.2f} MB).")
+                except Exception as dl_err:
+                    logger.warning(f"Could not download LFS blob for '{rel_path}': {dl_err}")
+
     def load_all_indexes(self):
         """Loads all existing strategy indexes and centroids from disk into memory with auto-rebuild fallback."""
+        self._ensure_lfs_files_resolved()
         loaded_ok = True
         for strategy in ["passage_native", "semantic_longdoc"]:
             try:
