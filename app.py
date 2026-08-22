@@ -1,6 +1,6 @@
 """
 Hugging Face Space Application for Hacker House Goa 2026: Voice-Enabled Indic RAG.
-Full-Screen Custom Command Center UI loaded inside ZeroGPU-compatible Gradio SDK.
+Production-grade FastAPI server with ZeroGPU-mounted Gradio interface.
 """
 
 import asyncio
@@ -29,7 +29,7 @@ except Exception:
     pass
 
 import gradio as gr
-from fastapi import File, Form, HTTPException, UploadFile, status
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
@@ -59,41 +59,12 @@ orchestrator.warmup_pipeline()
 print("[Space Startup] Full RAG pipeline preloaded and ready for traffic.")
 
 
-# ── Fullscreen CSS to remove all Gradio chrome and embed iframe ───────
-CUSTOM_CSS = """
-body, html { margin: 0 !important; padding: 0 !important; overflow: hidden !important; height: 100vh !important; width: 100vw !important; }
-.gradio-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; height: 100vh !important; }
-.main, .wrap, .contain, .gap-4, .gap-2 { padding: 0 !important; margin: 0 !important; gap: 0 !important; }
-footer, .built-with, gradio-app > footer, .gradio-container > footer { display: none !important; }
-#cmd-center-frame {
-    width: 100vw;
-    height: 100vh;
-    border: none;
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 99999;
-}
-"""
-
-
-# ── ZeroGPU Anchor Function ───────────────────────────────────────────
-@spaces.GPU
-def _zerogpu_anchor():
-    """ZeroGPU anchor: ensures Hugging Face ZeroGPU runtime attaches to this space."""
-    return True
-
-
-# ── Build Gradio Interface ────────────────────────────────────────────
-with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG", css=CUSTOM_CSS) as demo:
-    gr.HTML('<iframe id="cmd-center-frame" src="/demo-ui" allow="microphone; clipboard-write"></iframe>')
-    _btn = gr.Button("ZeroGPU Anchor", visible=False)
-    _btn.click(fn=_zerogpu_anchor)
-
-
-# ── Mount Custom Routes on demo.app ───────────────────────────────────
-app = demo.app
+# ── Create Main FastAPI App ───────────────────────────────────────────
+app = FastAPI(
+    title="Hacker House Goa 2026 - Voice Indic RAG API",
+    description="Sub-200ms Voice Indic RAG over 15 Indian Languages",
+    version="1.0.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -112,9 +83,10 @@ def _read_demo_html() -> str:
     return "<h1>Command Center UI Not Found</h1>"
 
 
+@app.get("/", response_class=HTMLResponse)
 @app.get("/demo-ui", response_class=HTMLResponse)
-async def serve_demo_ui():
-    """Serves the pure standalone ChatGPT-style Command Center HTML."""
+async def serve_root_ui():
+    """Serves the standalone ChatGPT-style Command Center HTML UI directly."""
     return HTMLResponse(content=_read_demo_html())
 
 
@@ -220,10 +192,26 @@ for prefix in ["", "/api"]:
     app.add_api_route(f"{prefix}/tts", _tts, methods=["POST"])
 
 
-# ── Launch ────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", "7860"))
-    host = os.getenv("HOST", "0.0.0.0")
-    print(f"[Gradio] Launching ZeroGPU Space on http://{host}:{port}")
-    demo.queue().launch(server_name=host, server_port=port)
+# ── Mount ZeroGPU-ready Gradio interface at /gradio ───────────────────
+@spaces.GPU
+def _zerogpu_anchor():
+    """ZeroGPU anchor function to reserve GPU compute."""
+    return True
 
+
+with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG") as demo:
+    gr.Markdown("# 🌴 Hacker House Goa 2026: Voice Indic RAG")
+    gr.HTML("<p>Command Center UI is running at <a href='/'>/ (Root)</a></p>")
+    _btn = gr.Button("ZeroGPU Anchor", visible=False)
+    _btn.click(fn=_zerogpu_anchor)
+
+app = gr.mount_gradio_app(app, demo, path="/gradio")
+
+
+# ── Launch Entrypoint ─────────────────────────────────────────────────
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", "7860"))
+    host = os.environ.get("HOST", "0.0.0.0")
+    print(f"[Server] Command Center running on http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)
