@@ -197,11 +197,12 @@ UNSAFE_PATTERNS = [
     r"(?i)(بم\s*(بنان\w*)|دھماکہ|ہتھیار|زہر|خودکشی|قتل|دہشت\s*گرد)",
     r"(?i)(چوری\s*(کرن\w*|کیسے)|ڈکیتی|دھوکہ\s*دہی|فراڈ\s*کرن\w*|بینک\s*اکاؤنٹ\s*ہیک|جعلی\s*(نوٹ|دستاویزات)|گھپلا|پیسے\s*لوٹ\w*)",
 
-    # Profanity, Obscenity, Adult & Sexually Explicit Content (Multilingual: EN, HI, MR, TA, etc.)
+    # Profanity, Obscenity, Adult & Sexually Explicit Content (Multilingual & Internet Slang)
     r"(?i)\b(dick\w*|cock\w*|penis\w*|vagina\w*|pussy\w*|cunt\w*|boobs?\w*|tits?\w*|porn\w*|nude\w*|nudity|naked|erotic\w*|sex\w*|intercourse|blowjob\w*|masturbat\w*|orgasm\w*|slut\w*|whore\w*|bitch\w*|bastard\w*|fuck\w*|shit\w*|asshole\w*)\b",
-    r"(?i)\b(chutiya\w*|bhosd\w*|madarchod\w*|behenchod\w*|bhenchod\w*|gaand\w*|lund\w*|loda\w*|lauda\w*|randi\w*|harami\w*|kamina\w*|chinal\w*)\b",
-    r"(?i)(चूतिया|भोसड़ी|मादरचोद|बहनचोद|गांड|लंड|लौड़ा|रांड|रंडी|हरामी|कमीना|हस्तमैथुन|संभोग|यौन\s*संबंध|पोर्न|नग्न|नंगा)",
-    r"(?i)(झाव्या|झवला|लवड्या|गांड|रांड|भडव्या|चोथ|बोंबल|संभोग|हस्तमैथुन|नग्न|पोर्न)",
+    r"(?i)\b(goon\w*|gooning|edg\w*|edging|fap\w*|fapping|jerk\w*\s+off|wank\w*|horny|cum\w*|cumming|squirt\w*|dildo\w*|vibrator\w*|creampie\w*|hentai|milf\w*|nsfw|smut\w*|bdsm|kinky|threesome\w*|gangbang\w*|anal|gang\s*bang\w*)\b",
+    r"(?i)\b(chutiya\w*|bhosd\w*|madarchod\w*|behenchod\w*|bhenchod\w*|gaand\w*|lund\w*|loda\w*|lauda\w*|randi\w*|harami\w*|kamina\w*|chinal\w*|mutth\w*|muth\w*|chudai\w*|chod\w*|tharki\w*|hawasi\w*)\b",
+    r"(?i)(चूतिया|भोसड़ी|मादरचोद|बहनचोद|गांड|लंड|लौड़ा|रांड|रंडी|हरामी|कमीना|हस्तमैथुन|मुठ|संभोग|यौन\s*संबंध|पोर्न|नग्न|नंगा|चोदना|चुदाई|ठरकी|हवासी)",
+    r"(?i)(झाव्या|झवला|लवड्या|गांड|रांड|भडव्या|चोथ|बोंबल|संभोग|हस्तमैथुन|नग्न|पोर्न|मुठ)",
     r"(?i)(ஓத்தா|பூலு|புண்டை|தேவிடியா|சுன்னி|கூதி|செக்ஸ்|ஆபாச|கற்பழிப்பு)",
     r"(?i)(దెంగు|పూకు|మడ్డ|లంజ|సెక్స్|అశ్లీల|పోర్న్)",
 ]
