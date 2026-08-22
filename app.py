@@ -180,7 +180,7 @@ LANG_CODE_MAP = {
 
 
 @spaces.GPU(duration=30)
-async def process_rag_query(
+def process_rag_query(
     text_input: str,
     audio_input: Optional[str],
     lang_choice: str,
@@ -211,7 +211,7 @@ async def process_rag_query(
     )
     
     try:
-        response: QueryResponse = await orchestrator.execute(req)
+        response: QueryResponse = asyncio.run(orchestrator.execute(req))
     except Exception as e:
         err_msg = f"❌ Pipeline Execution Error: {str(e)}"
         user_display = query_text if query_text else "🎙️ [Voice Audio Query]"
@@ -414,12 +414,12 @@ with gr.Blocks(title="🌴 Hacker House Goa 2026 — Voice Indic RAG", css=CUSTO
                 
             search_results_md = gr.Markdown("*(Enter a search term above to query the live FAISS HNSW graph)*")
             
-            async def search_index_direct(query: str):
+            def search_index_direct(query: str):
                 if not query.strip():
                     return "Please enter a search term."
                 idx_mgr = get_index_manager()
                 embedder = get_embedder()
-                q_vec = await asyncio.to_thread(embedder.encode_queries, query)
+                q_vec = embedder.encode_queries(query)
                 results_md = f"### Top Retrieved Graph Nodes for: `{query}`\n"
                 for s_name, strat_idx in idx_mgr.indexes.items():
                     res = strat_idx.search(q_vec, target_lang=None, top_k=3)
