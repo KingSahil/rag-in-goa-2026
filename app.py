@@ -1,7 +1,6 @@
 """
 Hugging Face Space Application for Hacker House Goa 2026: Voice-Enabled Indic RAG.
-FastAPI core with custom ChatGPT Command Center HTML at / and Gradio mounted at /gradio.
-ZeroGPU compatible.
+Full-Screen Custom Command Center UI loaded inside ZeroGPU-compatible Gradio SDK.
 """
 
 import asyncio
@@ -30,7 +29,7 @@ except Exception:
     pass
 
 import gradio as gr
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
@@ -60,8 +59,41 @@ orchestrator.warmup_pipeline()
 print("[Space Startup] Full RAG pipeline preloaded and ready for traffic.")
 
 
-# ── Create native FastAPI App ──────────────────────────────────────────
-app = FastAPI(title="Hacker House Goa 2026 Indic RAG")
+# ── Fullscreen CSS to remove all Gradio chrome and embed iframe ───────
+CUSTOM_CSS = """
+body, html { margin: 0 !important; padding: 0 !important; overflow: hidden !important; height: 100vh !important; width: 100vw !important; }
+.gradio-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; height: 100vh !important; }
+.main, .wrap, .contain, .gap-4, .gap-2 { padding: 0 !important; margin: 0 !important; gap: 0 !important; }
+footer, .built-with, gradio-app > footer, .gradio-container > footer { display: none !important; }
+#cmd-center-frame {
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99999;
+}
+"""
+
+
+# ── ZeroGPU Anchor Function ───────────────────────────────────────────
+@spaces.GPU
+def _zerogpu_anchor():
+    """ZeroGPU anchor: ensures Hugging Face ZeroGPU runtime attaches to this space."""
+    return True
+
+
+# ── Build Gradio Interface ────────────────────────────────────────────
+with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG") as demo:
+    gr.HTML('<iframe id="cmd-center-frame" src="/demo-ui" allow="microphone; clipboard-write"></iframe>')
+    _btn = gr.Button("ZeroGPU Anchor", visible=False)
+    _btn.click(fn=_zerogpu_anchor)
+
+
+# ── Mount Custom Routes on demo.app ───────────────────────────────────
+app = demo.app
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,16 +112,14 @@ def _read_demo_html() -> str:
     return "<h1>Command Center UI Not Found</h1>"
 
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_root():
-    """Serves the pure ChatGPT Command Center HTML directly."""
+@app.get("/demo-ui", response_class=HTMLResponse)
+async def serve_demo_ui():
+    """Serves the pure standalone ChatGPT-style Command Center HTML."""
     return HTMLResponse(content=_read_demo_html())
 
 
 # ── Health & Language Metadata ─────────────────────────────────────────
-@app.get("/health", response_class=JSONResponse)
-@app.get("/api/health", response_class=JSONResponse)
-async def health_check():
+async def _health_check():
     idx_mgr = get_index_manager()
     return {
         "status": "healthy",
@@ -101,9 +131,7 @@ async def health_check():
     }
 
 
-@app.get("/languages", response_class=JSONResponse)
-@app.get("/api/languages", response_class=JSONResponse)
-async def get_supported_languages():
+async def _get_supported_languages():
     return {
         "active_languages": config.LANGUAGES,
         "language_details": [{"code": l, **config.get_language_info(l)} for l in config.LANGUAGES],
@@ -180,29 +208,17 @@ async def _tts(req: TTSRequest):
         return {"status": "error", "message": str(e)}
 
 
+# ── Register all routes on both / and /api/ prefixes ──────────────────
 for prefix in ["", "/api"]:
+    app.add_api_route(f"{prefix}/health", _health_check, methods=["GET"], response_class=JSONResponse)
+    app.add_api_route(f"{prefix}/languages", _get_supported_languages, methods=["GET"], response_class=JSONResponse)
     app.add_api_route(f"{prefix}/query", _run_query, methods=["POST"], response_model=QueryResponse)
     app.add_api_route(f"{prefix}/tts", _tts, methods=["POST"])
 
 
-# ── Mount ZeroGPU-ready Gradio App at /gradio ──────────────────────────
-@spaces.GPU
-def _zerogpu_anchor():
-    return True
-
-with gr.Blocks(title="Hacker House Goa 2026 - Voice Indic RAG") as demo:
-    gr.Markdown("# 🌴 Hacker House Goa 2026 - Voice Indic RAG")
-    gr.HTML("<p>Command Center UI is running at <a href='/'>/ (Root)</a></p>")
-    _btn = gr.Button("ZeroGPU Anchor", visible=False)
-    _btn.click(fn=_zerogpu_anchor)
-
-app = gr.mount_gradio_app(app, demo, path="/gradio")
-
-
 # ── Launch ────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.getenv("PORT", "7860"))
     host = os.getenv("HOST", "0.0.0.0")
-    print(f"[Server] Command Center running on http://{host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+    print(f"[Gradio] Launching ZeroGPU Space on http://{host}:{port}")
+    demo.queue().launch(server_name=host, server_port=port, css=CUSTOM_CSS)
