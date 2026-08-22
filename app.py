@@ -60,177 +60,50 @@ from stt.sarvam_tts import synthesize_speech
 
 
 HEAD_HTML = """
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,600;0,800;0,900;1,600;1,800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Modak&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        colors: {
-          hhjungle: {
-            950: '#03140D',
-            900: '#062319',
-            850: '#082E20',
-            800: '#0B3B2A',
-            700: '#10523B',
-            600: '#177353',
-          },
-          hhgold: {
-            DEFAULT: '#FFE600',
-            glow: '#FFF066',
-            dark: '#E5CE00',
-            warm: '#F4B942',
-          },
-          hhpink: {
-            DEFAULT: '#FF2E93',
-            glow: '#FF5CAE',
-            dark: '#D60D70',
-          },
-          hhemerald: {
-            DEFAULT: '#00E599',
-            glow: '#33EBAD',
-            dark: '#00B377',
-          },
-        },
-        fontFamily: {
-          display: ['"Cinzel"', 'serif'],
-          serif: ['"Playfair Display"', 'Georgia', 'serif'],
-          mono: ['"Space Mono"', 'monospace'],
-          sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          devanagari: ['"Modak"', '"Rozha One"', '"Yatra One"', 'sans-serif'],
-        },
-        boxShadow: {
-          'brutal': '4px 4px 0px #000000',
-          'brutal-lg': '6px 6px 0px #000000',
-          'brutal-sm': '2px 2px 0px #000000',
-          'brutal-pink': '4px 4px 0px #FF2E93',
-          'brutal-gold': '4px 4px 0px #FFE600',
-          'brutal-emerald': '4px 4px 0px #00E599',
-          'glow-gold': '0 0 25px rgba(255, 230, 0, 0.25)',
-          'glow-pink': '0 0 25px rgba(255, 46, 147, 0.35)',
-          'glow-emerald': '0 0 25px rgba(0, 229, 153, 0.25)',
-        }
-      }
-    }
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+  html, body, .gradio-container, gradio-app, #root, .main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    background-color: #03140D !important;
   }
-</script>
+  footer, .built-with, gradio-app > footer, .gradio-container > footer {
+    display: none !important;
+  }
+  iframe.app-frame {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    margin: 0;
+    padding: 0;
+    z-index: 999999;
+    background: #03140D;
+  }
+</style>
 """
 
-# Direct HTML integration with high-contrast styling and prose neutralization
 CUSTOM_CSS = """
-:root {
-    color-scheme: dark !important;
-}
-
-html, body, .gradio-container, gradio-app, #root, .main {
+gradio-app, .gradio-container, body, html {
     margin: 0 !important;
     padding: 0 !important;
     max-width: 100% !important;
     width: 100vw !important;
     height: 100vh !important;
-    background-color: #03140D !important;
-    color: #F8FAFC !important;
-    color-scheme: dark !important;
     overflow: hidden !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    background-color: #03140D !important;
 }
-
-/* Neutralize Gradio .prose style hijacking */
-.prose, .prose *, .not-prose, .not-prose * {
-    color: inherit;
-    max-width: none !important;
-}
-
-.gradio-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-}
-
-.contain {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: 100% !important;
-    border: none !important;
-}
-
-footer, .svelte-10ymbgw, .built-with, gradio-app > footer, .gradio-container > footer {
+footer, .built-with {
     display: none !important;
 }
-
-/* Tropical Retro Sunburst Background Pattern */
-.bg-tropical-canvas {
-  background-color: #04160F !important;
-  background-image: 
-    radial-gradient(circle at 50% 10%, rgba(255, 230, 0, 0.04) 0%, transparent 60%),
-    radial-gradient(circle at 85% 70%, rgba(255, 46, 147, 0.03) 0%, transparent 50%),
-    linear-gradient(rgba(0, 229, 153, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 153, 0.02) 1px, transparent 1px) !important;
-  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px !important;
-}
-
-/* Knowledge Sea Radar Grid */
-.sea-grid {
-  background-color: #03140D !important;
-  background-image: 
-    linear-gradient(rgba(0, 229, 153, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 153, 0.06) 1px, transparent 1px) !important;
-  background-size: 20px 20px !important;
-}
-
-.goa-badge {
-  text-shadow: 
-    0 0 12px rgba(255, 46, 147, 0.8),
-    2px 2px 0px #000000;
-}
-
-@keyframes fadeInSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-message {
-  animation: fadeInSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes voiceWave {
-  0%, 100% { height: 6px; }
-  50% { height: 22px; }
-}
-.voice-bar {
-  animation: voiceWave 1.2s infinite ease-in-out;
-}
-.voice-bar:nth-child(1) { animation-delay: 0.0s; }
-.voice-bar:nth-child(2) { animation-delay: 0.15s; }
-.voice-bar:nth-child(3) { animation-delay: 0.3s; }
-.voice-bar:nth-child(4) { animation-delay: 0.45s; }
-.voice-bar:nth-child(5) { animation-delay: 0.2s; }
 """
-
-# Read the full custom HTML Command Center UI
-def get_custom_html() -> str:
-    demo_file = config.BASE_DIR / "demo" / "index.html"
-    if demo_file.exists():
-        with open(demo_file, "r", encoding="utf-8") as f:
-            content = f.read()
-        if "<body" in content and "</body>" in content:
-            body_start = content.find("<body")
-            body_tag_end = content.find(">", body_start) + 1
-            body_end = content.rfind("</body>")
-            inner_body = content[body_tag_end:body_end]
-            return f'<div class="h-screen w-screen flex bg-tropical-canvas selection:bg-hhgold selection:text-black overflow-hidden font-sans">{inner_body}</div>'
-        return content
-    return "<h1>Hacker House Goa 2026 Command Center</h1>"
 
 
 @spaces.GPU
@@ -240,7 +113,13 @@ def _dummy_zerogpu():
 
 
 with gr.Blocks(title="🌴 Hacker House Goa 2026 — Voice Indic RAG", css=CUSTOM_CSS, head=HEAD_HTML) as demo:
-    gr.HTML(get_custom_html(), elem_classes=["not-prose"])
+    gr.HTML("""
+    <iframe class="app-frame"
+            src="/app_ui" 
+            allow="microphone; camera; autoplay; clipboard-write; fullscreen" 
+            style="position:fixed; top:0; left:0; width:100vw; height:100vh; border:none; margin:0; padding:0; z-index:999999; overflow:hidden; background:#03140D;">
+    </iframe>
+    """, elem_classes=["not-prose"])
     # Hidden dummy button to ensure ZeroGPU handler registration
     dummy_btn = gr.Button("zero_gpu_anchor", visible=False)
     dummy_btn.click(fn=_dummy_zerogpu)
@@ -264,6 +143,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/app_ui", response_class=HTMLResponse)
+@app.get("/ui", response_class=HTMLResponse)
+async def serve_command_center_ui():
+    """Serves the isolated retro-tropical ChatGPT-style Command Center interface."""
+    demo_file = config.BASE_DIR / "demo" / "index.html"
+    if demo_file.exists():
+        with open(demo_file, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Command Center UI Not Found</h1>", status_code=404)
 
 
 @app.get("/health", response_class=JSONResponse)
