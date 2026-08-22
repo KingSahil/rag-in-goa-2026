@@ -98,8 +98,8 @@ EVASION_OBJECTS = r"(the\s+)?(polic\w*|cop\w*|law\s+enforcement|fbi|authorit\w*|
 THEFT_VERBS = r"(steal\w*|stole|rob\w*|shoplift\w*|pickpocket\w*|burglariz\w*|loot\w*|harvest\w*|skim\w*|phish\w*|clone\w*|hack\w*|trespass\w*)"
 THEFT_OBJECTS = r"(a\s+|an\s+)?(car\w*|money|funds?|bank\w*|bank\s*accounts?|store\w*|shop\w*|wallet\w*|phone\w*|identit\w*|credit\s*cards?|card\s+numbers?|cvv|passwords?|2fa|session\s+(token|cookie)s?|credentials?|vehicle\w*|crypto\s*wallets?|paypal|house|office|building|deposit\w*)"
 
-CYBER_VERBS = r"(hack\w*|ddos\s+attack\w*|bypass\w*\s+security|exploit\w*\s+vulnerabilit\w*|creat\w*|writ\w*|build\w*|cod\w*|deploy\w*|spread\w*|distribut\w*)"
-CYBER_OBJECTS = r"(malware|ransomware|computer\s*virus\w*|trojan\w*|worm\w*|keylogger\w*|rootkit\w*|botnet\w*|exploit\w*)"
+CYBER_VERBS = r"(hack\w*|ddos\s+attack\w*|bypass\w*\s+security|exploit\w*\s+vulnerabilit\w*|creat\w*|writ\w*|build\w*|cod\w*|deploy\w*|spread\w*|distribut\w*|infiltrat\w*|breach\w*|crack\w*|break\s+into)"
+CYBER_OBJECTS = r"(malware|ransomware|computer\s*virus\w*|trojan\w*|worm\w*|keylogger\w*|rootkit\w*|botnet\w*|exploit\w*|nasa|pentagon|fbi|cia|government|gov|website\w*|server\w*|database\w*|network\w*|system\w*|wifi\w*|router\w*|account\w*|email\w*|phone\w*|device\w*|computer\w*|camera\w*|cctv|bank\w*|infrastructure|someone|a\s+person|company|portal\w*)"
 
 # Comprehensive multilingual unsafe / inappropriate keyword and regex patterns
 # Covers profanity, hate speech, self-harm, violent extremism, weapons, theft, fraud, cyber exploitation, and jailbreak attacks
@@ -120,8 +120,10 @@ UNSAFE_PATTERNS = [
     r"(?i)\b(commit\w*\s+suicide|how\s+to\s+hang\s+myself|self[- ]harm\w*|slit\w*\s+(my\s+)?wrists?|kill\w*\s+yourself|ways\s+to\s+die)\b",
     r"(?i)\b(contaminat\w*|poison\w*|sabotag\w*)\b(?:\s+[\w-]+){0,4}\s+\b(water\s*supply|reservoir|food\s*supply|municipal\s*water)\b",
     
-    # Cyberattacks / Illegal Exploits / Malware
-    build_verb_object_pattern(rf"(how\s+to\s+)?{CYBER_VERBS}", CYBER_OBJECTS, max_gap=4),
+    # Cyberattacks / Illegal Exploits / Malware / Target Hacking
+    build_verb_object_pattern(rf"(how\s+to\s+)?{CYBER_VERBS}", rf"(a\s+|an\s+|the\s+|into\s+)?{CYBER_OBJECTS}", max_gap=4),
+    r"(?i)\b(how\s+to\s+hack|hack\s+into|hacking\s+tutorial|crack\s+passwords?|unauthorized\s+access|sql\s+injection\s+tutorial|xss\s+exploit|ddos\s+attack\w*|brute\s*force\s+attack\w*)\b",
+    r"(?i)\b(hack\w*|crack\w*|infiltrat\w*|breach\w*)\b(?:\s+[\w\'-]+){0,4}\s+\b(into|nasa|pentagon|gov|government|bank\w*|wifi|server\w*|database\w*|network\w*|system\w*|account\w*|phone\w*|device\w*|computer\w*)\b",
     r"(?i)\b(credential\s+stuffing|session\s+hijacking|cookie\s+theft|steal\w*\s+2fa|steal\w*\s+session\s+(token|cookie)s?|keylogger\s+(script|code|tutorial)|account\s+takeover\s+tutorial)\b",
 
     # Stalking / Covert Tracking / Spyware / Non-Consensual Surveillance (English)
