@@ -107,8 +107,11 @@ footer, .built-with, gradio-app > footer, .gradio-container > footer { display: 
 """
 
 
-# ── ZeroGPU Bridge Functions ──────────────────────────────────────────
-@spaces.GPU
+import nest_asyncio
+nest_asyncio.apply()
+
+# ── ZeroGPU Execution Bridge Functions ───────────────────────────────
+@spaces.GPU(duration=60)
 def rag_query_bridge(payload_str: str) -> str:
     """ZeroGPU execution bridge for end-to-end RAG query."""
     temp_audio_path = None
@@ -131,7 +134,13 @@ def rag_query_bridge(payload_str: str) -> str:
             cross_lingual=bool(data.get("cross_lingual", False)),
             bypass_cache=bool(data.get("bypass_cache", False)),
         )
-        res = asyncio.run(orchestrator.execute(req))
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        res = loop.run_until_complete(orchestrator.execute(req))
         return res.model_dump_json()
     except Exception as e:
         return json.dumps({
@@ -149,7 +158,7 @@ def rag_query_bridge(payload_str: str) -> str:
                 pass
 
 
-@spaces.GPU
+@spaces.GPU(duration=30)
 def tts_query_bridge(payload_str: str) -> str:
     """ZeroGPU execution bridge for Sarvam AI Indic TTS."""
     try:
