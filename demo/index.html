@@ -138,12 +138,45 @@
     .voice-bar:nth-child(3) { animation-delay: 0.3s; }
     .voice-bar:nth-child(4) { animation-delay: 0.45s; }
     .voice-bar:nth-child(5) { animation-delay: 0.2s; }
+
+    /* Force dark styles on input and select elements */
+    #chatInput {
+      background: transparent !important;
+      background-color: transparent !important;
+      color: #F8FAFC !important;
+      -webkit-text-fill-color: #F8FAFC !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    #chatInput::placeholder {
+      color: #64748B !important;
+      -webkit-text-fill-color: #64748B !important;
+    }
+
+    #langSelect, #voiceOutLangSelect {
+      background-color: #062319 !important;
+      background: #062319 !important;
+      color: #F8FAFC !important;
+      -webkit-text-fill-color: #F8FAFC !important;
+      border: 1px solid rgba(0, 0, 0, 0.8) !important;
+    }
+
+    #langSelect option, #voiceOutLangSelect option {
+      background-color: #03140D !important;
+      color: #F8FAFC !important;
+    }
+
+    button {
+      font-family: inherit;
+    }
   </style>
 </head>
 <body class="h-screen w-screen flex bg-tropical-canvas selection:bg-hhgold selection:text-black overflow-hidden font-sans">
 
   <!-- ==================== TOGGLEABLE SIDEBAR (HH GOA BRANDED) ==================== -->
-  <aside id="sidebar" class="w-72 bg-hhjungle-950 border-r-2 border-black flex flex-col justify-between p-3.5 z-30 transition-all duration-300 select-none shrink-0 shadow-brutal-lg">
+  <aside id="sidebar" class="hidden w-72 bg-hhjungle-950 border-r-2 border-black flex flex-col justify-between p-3.5 z-30 transition-all duration-300 select-none shrink-0 shadow-brutal-lg">
     
     <!-- Top Section -->
     <div class="flex flex-col gap-3.5">
