@@ -235,15 +235,30 @@ class PyTorchMultilingualE5Embedder:
 def get_embedder():
     """
     Get or initialize the global singleton embedder instance with ONNX-first policy.
+    On HF Spaces (where ONNX export may produce corrupt files), forces PyTorch fallback.
     """
     global _EMBEDDER_INSTANCE
     if _EMBEDDER_INSTANCE is None:
-        if getattr(config, "ENABLE_ONNX_EMBEDDING", True):
+        # On HF Spaces, skip ONNX to avoid corrupt export files producing zero embeddings
+        is_hf_space = bool(os.getenv("SPACE_ID") or os.getenv("SPACE_AUTHOR_NAME"))
+        enable_onnx = getattr(config, "ENABLE_ONNX_EMBEDDING", True) and not is_hf_space
+        if enable_onnx:
             try:
                 _EMBEDDER_INSTANCE = ONNXMultilingualE5Embedder()
+                # Validate ONNX embedder actually works (not zero vectors)
+                import numpy as np
+                test_vec = _EMBEDDER_INSTANCE.encode_queries("test warmup query")
+                test_norm = float(np.linalg.norm(test_vec))
+                if test_norm < 0.5:
+                    logger.warning(f"ONNX embedder returned near-zero vectors (norm={test_norm:.4f}). Falling back to PyTorch.")
+                    _EMBEDDER_INSTANCE = None
+                    raise RuntimeError("ONNX embedder validation failed: near-zero output")
             except Exception as e:
                 logger.warning(f"Failed to initialize ONNX Embedder: {e}. Falling back to PyTorch.")
                 _EMBEDDER_INSTANCE = PyTorchMultilingualE5Embedder()
         else:
+            if is_hf_space:
+                logger.info("HF Space detected: using PyTorch embedder (ONNX skipped to avoid export artifacts).")
             _EMBEDDER_INSTANCE = PyTorchMultilingualE5Embedder()
     return _EMBEDDER_INSTANCE
+

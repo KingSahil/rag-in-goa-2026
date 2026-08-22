@@ -207,6 +207,46 @@ with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG", css=CUSTOM_
     gr_btn_t = gr.Button("TTS Bridge", visible=False, elem_id="gr_btn_t")
     gr_btn_t.click(fn=tts_query_bridge, inputs=[gr_in_t], outputs=[gr_out_t], api_name="tts_query")
 
+    # ── Debug endpoint for diagnosing raw FAISS scores on Space ──────────
+    def debug_index_bridge(payload_str: str) -> str:
+        """Diagnostic bridge: runs raw FAISS search and returns scores for debugging."""
+        try:
+            import numpy as np
+            from retrieval.index_faiss import get_index_manager
+            from retrieval.embed import get_embedder
+
+            data = json.loads(payload_str)
+            query = data.get("text", "Goa beach")
+            embedder = get_embedder()
+            idx_mgr = get_index_manager()
+
+            qvec = embedder.encode_queries(query)
+            qvec_2d = qvec.reshape(1, -1).astype(np.float32)
+
+            result = {}
+            for strat_name, strat_idx in idx_mgr.indexes.items():
+                ntotal = strat_idx.index.ntotal
+                raw_scores, raw_ids = strat_idx.index.search(qvec_2d, min(5, ntotal))
+                candidates = strat_idx.search(qvec, target_lang="en", top_k=5)
+                result[strat_name] = {
+                    "ntotal": ntotal,
+                    "raw_faiss_scores": raw_scores[0].tolist(),
+                    "raw_faiss_ids": raw_ids[0].tolist(),
+                    "candidate_scores": [c.get("score", 0.0) for c in candidates],
+                    "num_candidates": len(candidates),
+                }
+            result["query_vec_norm"] = float(np.linalg.norm(qvec))
+            result["centroids_available"] = list(idx_mgr.centroids.keys())
+            return json.dumps(result, ensure_ascii=False)
+        except Exception as e:
+            import traceback
+            return json.dumps({"error": str(e), "traceback": traceback.format_exc()})
+
+    gr_in_d = gr.Textbox(visible=False, elem_id="gr_in_d")
+    gr_out_d = gr.Textbox(visible=False, elem_id="gr_out_d")
+    gr_btn_d = gr.Button("Debug Index Bridge", visible=False, elem_id="gr_btn_d")
+    gr_btn_d.click(fn=debug_index_bridge, inputs=[gr_in_d], outputs=[gr_out_d], api_name="debug_index")
+
 
 from api.main import app as fastapi_app
 
