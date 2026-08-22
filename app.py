@@ -357,12 +357,218 @@ async def generate_speech_audio(req: TTSRequest):
             speaker=req.speaker,
             pace=req.pace,
         )
+footer, .built-with, gradio-app > footer, .gradio-container > footer {
+    display: none !important;
+}
+
+/* Force dark background and remove Gradio white boxes */
+#chatInput {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #F8FAFC !important;
+    -webkit-text-fill-color: #F8FAFC !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#chatInput::placeholder {
+    color: #64748B !important;
+    -webkit-text-fill-color: #64748B !important;
+}
+
+#langSelect, #voiceOutLangSelect {
+    background-color: #062319 !important;
+    background: #062319 !important;
+    color: #F8FAFC !important;
+    -webkit-text-fill-color: #F8FAFC !important;
+    border: 1px solid rgba(0, 0, 0, 0.8) !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
+}
+
+#langSelect option, #voiceOutLangSelect option {
+    background-color: #03140D !important;
+    color: #F8FAFC !important;
+}
+
+#tabChatBtn, #tabSeaBtn, #tabSpeedBtn {
+    border: none !important;
+    outline: none !important;
+}
+"""
+
+
+def get_custom_html() -> str:
+    """Reads the static demo HTML file for direct injection into Gradio Blocks."""
+    demo_file = config.BASE_DIR / "demo" / "index.html"
+    if demo_file.exists():
+        with open(demo_file, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Command Center UI Not Found</h1>"
+
+
+@spaces.GPU
+def _dummy_zerogpu():
+    """ZeroGPU requirement: at least one function registered to event scan."""
+    return True
+
+
+with gr.Blocks(title="🌴 Hacker House Goa 2026 — Voice Indic RAG", css=CUSTOM_CSS, head=HEAD_HTML) as demo:
+    gr.HTML(get_custom_html(), elem_classes=["not-prose"])
+    dummy_btn = gr.Button("zero_gpu_anchor", visible=False)
+    dummy_btn.click(fn=_dummy_zerogpu)
+
+
+# Preload models and perform full pipeline warmup at startup
+print("[Space Startup] Preloading embedding model, FAISS indexes, and warming up pipeline...")
+orchestrator = get_orchestrator()
+orchestrator.warmup_pipeline()
+print("[Space Startup] Full RAG pipeline preloaded and warmed up successfully.")
+
+
+app = demo.app
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+async def health_check() -> Dict[str, Any]:
+    """Health check reporting system and index readiness."""
+    index_mgr = get_index_manager()
+    index_stats = {
+        name: idx.index.ntotal for name, idx in index_mgr.indexes.items()
+    }
+    return {
+        "status": "healthy",
+        "configured_languages": config.LANGUAGES,
+        "embedding_model": config.EMBEDDING_MODEL_NAME,
+        "indexes_loaded": index_stats,
+        "centroids_available": list(index_mgr.centroids.keys()),
+        "sarvam_stt_configured": bool(config.SARVAM_API_KEY),
+        "llm_fallback_configured": bool(config.LLM_API_KEY),
+    }
+
+
+async def get_supported_languages() -> Dict[str, Any]:
+    """Returns metadata for all currently configured active languages."""
+    lang_details = [
+        {"code": l, **config.get_language_info(l)} for l in config.LANGUAGES
+    ]
+    return {
+        "active_languages": config.LANGUAGES,
+        "language_details": lang_details,
+    }
+
+
+def _parse_bool(val: Any, default: bool = True) -> bool:
+    if val is None:
+        return default
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ("true", "1", "yes", "on")
+    return bool(val)
+
+
+async def query_pipeline(
+    file: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
+    language_hint: Optional[str] = Form(None),
+    cross_lingual: Optional[Any] = Form(None),
+    bypass_cache: Optional[Any] = Form(None),
+    request_body: Optional[QueryRequest] = None,
+) -> QueryResponse:
+    """
+    Execute end-to-end Voice RAG query for the Command Center UI.
+    """
+    orchestrator = get_orchestrator()
+    temp_audio_path = None
+    is_cross_lingual = _parse_bool(cross_lingual, default=False)
+    is_bypass_cache = _parse_bool(bypass_cache, default=False)
+    
+    try:
+        if request_body and (request_body.text or request_body.audio_path):
+            return await orchestrator.execute(request_body)
+            
+        if file and file.filename:
+            suffix = Path(file.filename).suffix or ".wav"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                temp_audio_path = tmp.name
+                
+            req = QueryRequest(
+                audio_path=temp_audio_path,
+                language_hint=language_hint,
+                cross_lingual=is_cross_lingual,
+                bypass_cache=is_bypass_cache,
+            )
+            return await orchestrator.execute(req)
+            
+        if text and text.strip():
+            req = QueryRequest(
+                text=text.strip(),
+                language_hint=language_hint,
+                cross_lingual=is_cross_lingual,
+                bypass_cache=is_bypass_cache,
+            )
+            return await orchestrator.execute(req)
+            
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either 'file' audio upload or 'text' query must be provided.",
+        )
+    finally:
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+            except Exception:
+                pass
+
+
+class TTSRequest(BaseModel):
+    """Payload for Text-to-Speech audio generation."""
+    text: str
+    target_language: str = "hi"
+    speaker: Optional[str] = None
+    pace: float = 1.0
+
+
+async def generate_speech_audio(req: TTSRequest):
+    """
+    Synthesizes speech audio from text using Sarvam Bulbul TTS.
+    Returns JSON containing audio base64 or fallback status.
+    """
+    try:
+        res = synthesize_speech(
+            text=req.text,
+            language_code=req.target_language,
+            speaker=req.speaker,
+            pace=req.pace,
+        )
         return res
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
+async def serve_root_ui():
+    """Serves pure HTML5 Command Center UI directly with full script and style execution."""
+    demo_file = config.BASE_DIR / "demo" / "index.html"
+    if demo_file.exists():
+        with open(demo_file, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Command Center UI Not Found</h1>", status_code=404)
+
+
 # Register endpoints on both root and /api/ prefixes for full Gradio/SvelteKit compatibility
+app.add_api_route("/", serve_root_ui, methods=["GET"], response_class=HTMLResponse)
+app.router.routes.insert(0, app.router.routes.pop())
+
 for prefix in ["", "/api"]:
     app.add_api_route(f"{prefix}/health", health_check, methods=["GET"], response_class=JSONResponse)
     app.add_api_route(f"{prefix}/languages", get_supported_languages, methods=["GET"], response_class=JSONResponse)
