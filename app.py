@@ -155,11 +155,15 @@ async def _run_query(
     language_hint: Optional[str] = Form(None),
     cross_lingual: Optional[str] = Form(None),
     bypass_cache: Optional[str] = Form(None),
+    request_body: Optional[QueryRequest] = None,
 ):
     """Execute the 9-stage Voice RAG pipeline."""
     orch = get_orchestrator()
     temp_path = None
     try:
+        if request_body:
+            return await orch.execute(request_body)
+
         if file and file.filename:
             suffix = Path(file.filename).suffix or ".wav"
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
