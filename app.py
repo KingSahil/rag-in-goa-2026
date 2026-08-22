@@ -30,6 +30,19 @@ except Exception:
 
 import gradio as gr
 
+# Defensive monkeypatch for Gradio 5.x queueing lock bug
+try:
+    import gradio.queueing
+    if hasattr(gradio.queueing, "Queue"):
+        _orig_queue_init = gradio.queueing.Queue.__init__
+        def _patched_queue_init(self, *args, **kwargs):
+            _orig_queue_init(self, *args, **kwargs)
+            if not hasattr(self, "pending_message_lock") or self.pending_message_lock is None:
+                self.pending_message_lock = asyncio.Lock()
+        gradio.queueing.Queue.__init__ = _patched_queue_init
+except Exception:
+    pass
+
 # ZeroGPU decorator shim
 try:
     import spaces
