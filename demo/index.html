@@ -726,13 +726,82 @@
       for (const ep of endpoints) {
         try {
           const res = await fetch(ep, options);
-          if (res.status !== 404 && res.status !== 405) {
+          if (res.status === 200) {
             return res;
           }
         } catch (e) {
           lastErr = e;
         }
       }
+
+      // Gradio 5 ZeroGPU API Bridge Fallback (for Hugging Face Spaces)
+      if (path.includes('/query')) {
+        try {
+          let payloadObj = {};
+          if (options.body instanceof FormData) {
+            options.body.forEach((val, key) => {
+              if (typeof val === 'string') payloadObj[key] = val;
+            });
+          } else if (typeof options.body === 'string') {
+            payloadObj = JSON.parse(options.body);
+          }
+          
+          const callRes = await fetch('/gradio_api/call/rag_query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: [JSON.stringify(payloadObj)] })
+          });
+          if (callRes.ok) {
+            const { event_id } = await callRes.json();
+            const streamRes = await fetch('/gradio_api/call/rag_query/' + event_id);
+            const streamText = await streamRes.text();
+            const match = streamText.match(/data:\s*(\[.*\])/);
+            if (match) {
+              const rawData = JSON.parse(match[1])[0];
+              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+              return {
+                status: 200,
+                ok: true,
+                json: async () => parsed
+              };
+            }
+          }
+        } catch (e) {
+          console.warn("Gradio API fallback query error:", e);
+        }
+      }
+
+      if (path.includes('/tts')) {
+        try {
+          let payloadObj = {};
+          if (typeof options.body === 'string') {
+            payloadObj = JSON.parse(options.body);
+          }
+          const callRes = await fetch('/gradio_api/call/tts_query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: [JSON.stringify(payloadObj)] })
+          });
+          if (callRes.ok) {
+            const { event_id } = await callRes.json();
+            const streamRes = await fetch('/gradio_api/call/tts_query/' + event_id);
+            const streamText = await streamRes.text();
+            const match = streamText.match(/data:\s*(\[.*\])/);
+            if (match) {
+              const rawData = JSON.parse(match[1])[0];
+              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+              return {
+                status: 200,
+                ok: true,
+                json: async () => parsed
+              };
+            }
+          }
+        } catch (e) {
+          console.warn("Gradio API fallback TTS error:", e);
+        }
+      }
+
       return await fetch(path, options);
     }
 
