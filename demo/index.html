@@ -331,7 +331,7 @@
     <main id="chatView" class="flex-1 w-full h-[calc(100vh-3.5rem)] overflow-y-auto relative scroll-smooth">
       
       <!-- Wide Reading Column (Like ChatGPT) -->
-      <div id="messagesContainer" class="w-full max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col gap-8 pb-48">
+      <div id="messagesContainer" class="w-full max-w-4xl lg:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col gap-8 pb-64">
         
         <!-- Welcome Hero State (Shown when no messages) -->
         <div id="welcomeState" class="my-auto min-h-[50vh] flex flex-col items-center justify-center text-center py-10">
@@ -402,8 +402,8 @@
 
       </div>
 
-      <!-- ==================== CHATGPT-STYLE FLOATING BOTTOM BAR ==================== -->
-      <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-hhjungle-950 via-hhjungle-950/95 to-transparent flex flex-col items-center pointer-events-none z-20">
+      <!-- ==================== CHATGPT-STYLE FIXED BOTTOM BAR ==================== -->
+      <div class="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-hhjungle-950 via-hhjungle-950/95 to-transparent flex flex-col items-center pointer-events-none z-30">
         
         <div class="max-w-3xl lg:max-w-4xl w-full flex flex-col gap-2 pointer-events-auto">
           
@@ -893,6 +893,12 @@
       }
     }
 
+    function scrollToBottom() {
+      setTimeout(() => {
+        chatView.scrollTo({ top: chatView.scrollHeight, behavior: 'smooth' });
+      }, 50);
+    }
+
     // UI Message Appenders (ChatGPT Style: Clean, Wide, Elegant)
     function appendUserMessage(text, isAudio = false) {
       const id = "user_" + Date.now();
@@ -906,7 +912,7 @@
         </div>
       `;
       conversationStream.appendChild(el);
-      chatView.scrollTop = chatView.scrollHeight;
+      scrollToBottom();
       return id;
     }
 
@@ -939,7 +945,7 @@
         </div>
       `;
       conversationStream.appendChild(el);
-      chatView.scrollTop = chatView.scrollHeight;
+      scrollToBottom();
       return id;
     }
 
@@ -952,6 +958,7 @@
           <p>${escapeHtml(errorText)}</p>
         </div>
       `;
+      scrollToBottom();
     }
 
     function updateAssistantMessage(id, data) {
@@ -1083,7 +1090,7 @@
         </div>
       `;
 
-      chatView.scrollTop = chatView.scrollHeight;
+      scrollToBottom();
     }
 
     // Markdown Parser Helper
