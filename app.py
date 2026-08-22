@@ -155,5 +155,5 @@ with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG", css=CUSTOM_
 
 # ── Launch Entrypoint ─────────────────────────────────────────────────
 if __name__ == "__main__":
-    demo.launch()
+    demo.queue().launch()
 
