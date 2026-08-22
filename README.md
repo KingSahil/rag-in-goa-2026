@@ -250,10 +250,23 @@ Explore deep-dive architectural specifications, safety blueprints, and benchmark
 
 ## 🚀 Quickstart & Local Setup
 
-### 1. Installation
+### 1. Installation & Virtual Environment Setup
 ```bash
-git clone https://github.com/Anshsurana123/RAGINGOA.git
-cd RAGINGOA
+git clone https://github.com/KingSahil/rag-in-goa-2026.git
+cd rag-in-goa-2026
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment (MUST activate before running any commands):
+# On Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# (If execution policy blocked, run: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass)
+
+# On Linux / macOS / Git Bash:
+# source .venv/bin/activate
+
+# Install dependencies in virtual environment
 pip install -r requirements.txt
 cp .env.example .env
 ```
@@ -268,6 +281,8 @@ LLM_MODEL=llama-3.3-70b-versatile
 
 ### 3. Run Benchmark Scripts
 ```bash
+# (Ensure .venv is activated)
+
 # 1. Run the 50ms retrieval latency budget benchmark (embed + FAISS search)
 python -m app.benchmark 50
 
@@ -278,11 +293,15 @@ python benchmark/run_cold_start_bench.py
 python benchmark/run_speed_bench_50.py
 ```
 
-### 4. Run Server & Web UI
+### 4. Run Server & Web UI Locally
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 7860 --reload
-# or run the Gradio Space entrypoint:
+# Ensure your virtual environment is active (.\.venv\Scripts\Activate.ps1)
+
+# Option A: Full Command Center UI + FastAPI Serving Layer (Gradio entrypoint)
 python app.py
+
+# Option B: FastAPI Serving Layer directly with hot-reload
+uvicorn api.main:app --host 0.0.0.0 --port 7860 --reload
 ```
 Open **[http://localhost:7860](http://localhost:7860)** in your browser.
 
