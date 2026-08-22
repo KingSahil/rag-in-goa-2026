@@ -86,7 +86,7 @@ def _zerogpu_anchor():
 
 
 # ── Build Gradio Interface ────────────────────────────────────────────
-with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG") as demo:
+with gr.Blocks(title="🌴 Hacker House Goa 2026 - Voice Indic RAG", css=CUSTOM_CSS) as demo:
     gr.HTML('<iframe id="cmd-center-frame" src="/demo-ui" allow="microphone; clipboard-write"></iframe>')
     _btn = gr.Button("ZeroGPU Anchor", visible=False)
     _btn.click(fn=_zerogpu_anchor)
@@ -221,4 +221,5 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "7860"))
     host = os.getenv("HOST", "0.0.0.0")
     print(f"[Gradio] Launching ZeroGPU Space on http://{host}:{port}")
-    demo.queue().launch(server_name=host, server_port=port, css=CUSTOM_CSS)
+    demo.queue().launch(server_name=host, server_port=port)
+
