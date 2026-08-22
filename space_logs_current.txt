@@ -1,0 +1,248 @@
+===== Application Startup at 2026-08-22 15:41:11 =====
+[Space Startup] Preloading embedding model, FAISS indexes, and warming up pipeline...
+2026-08-22 17:41:27,717 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-22 17:41:27,718 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-22 17:41:27,732 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:27,749 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/config.json "HTTP/1.1 200 OK"
+
+config.json:   0%|          | 0.00/655 [00:00<?, ?B/s][A
+config.json: 100%|██████████| 655/655 [00:00<00:00, 4.15MB/s]
+2026-08-22 17:41:27,769 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:27,784 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:27,801 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+
+tokenizer_config.json:   0%|          | 0.00/443 [00:00<?, ?B/s][A
+tokenizer_config.json: 100%|██████████| 443/443 [00:00<00:00, 3.42MB/s]
+2026-08-22 17:41:27,818 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:27,834 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:27,851 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:27,873 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-22 17:41:27,892 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/sentencepiece.bpe.model "HTTP/1.1 302 Found"
+2026-08-22 17:41:27,912 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small/xet-read-token/614241f622f53c4eeff9890bdc4f31cfecc418b3 "HTTP/1.1 200 OK"
+
+sentencepiece.bpe.model:   0%|          | 0.00/5.07M [00:00<?, ?B/s][A
+sentencepiece.bpe.model: 100%|██████████| 5.07M/5.07M [00:00<00:00, 17.9MB/s]
+2026-08-22 17:41:28,211 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer.json "HTTP/1.1 302 Found"
+
+tokenizer.json:   0%|          | 0.00/17.1M [00:00<?, ?B/s][A
+tokenizer.json: 100%|██████████| 17.1M/17.1M [00:00<00:00, 120MB/s]
+2026-08-22 17:41:28,372 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:28,387 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:28,402 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:28,418 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/special_tokens_map.json "HTTP/1.1 200 OK"
+
+special_tokens_map.json:   0%|          | 0.00/167 [00:00<?, ?B/s][A
+special_tokens_map.json: 100%|██████████| 167/167 [00:00<00:00, 1.27MB/s]
+2026-08-22 17:41:28,439 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:30,441 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,514 [INFO] Exporting multilingual-e5-small to ONNX format...
+2026-08-22 17:41:30.528022103 [W:onnxruntime:Default, device_discovery.cc:164 DiscoverDevicesForPlatform] GPU device discovery failed: device_discovery.cc:89 ReadFileContents Failed to open file: "/sys/class/drm/card0/device/vendor"
+2026-08-22 17:41:30,533 [WARNING] Failed to initialize ONNX Embedder: No module named 'onnx'. Falling back to PyTorch.
+2026-08-22 17:41:30,533 [INFO] Loading PyTorch fallback embedding model: 'intfloat/multilingual-e5-small'...
+2026-08-22 17:41:30,534 [INFO] No device provided, using cuda:0
+2026-08-22 17:41:30,550 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:30,564 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/modules.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,579 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/modules.json "HTTP/1.1 200 OK"
+
+modules.json:   0%|          | 0.00/387 [00:00<?, ?B/s][A
+modules.json: 100%|██████████| 387/387 [00:00<00:00, 2.61MB/s]
+2026-08-22 17:41:30,598 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config_sentence_transformers.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:30,599 [INFO] Loading SentenceTransformer model from intfloat/multilingual-e5-small.
+2026-08-22 17:41:30,616 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config_sentence_transformers.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:30,668 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:30,681 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/README.md "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,708 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/README.md "HTTP/1.1 200 OK"
+
+README.md:   0%|          | 0.00/498k [00:00<?, ?B/s][A
+README.md: 100%|██████████| 498k/498k [00:00<00:00, 49.4MB/s]
+2026-08-22 17:41:30,734 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:30,747 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/modules.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,762 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:30,776 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/sentence_bert_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,795 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/sentence_bert_config.json "HTTP/1.1 200 OK"
+
+sentence_bert_config.json:   0%|          | 0.00/57.0 [00:00<?, ?B/s][A
+sentence_bert_config.json: 100%|██████████| 57.0/57.0 [00:00<00:00, 384kB/s]
+2026-08-22 17:41:30,813 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:30,827 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:30,841 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:30,895 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+
+model.safetensors:   0%|          | 0.00/471M [00:00<?, ?B/s][A
+model.safetensors: 100%|██████████| 471M/471M [00:00<00:00, 628MB/s]
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s][A
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1446.55it/s]
+2026-08-22 17:41:32,127 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:32,144 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:32,162 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:32,178 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:32,193 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:32,207 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:32,222 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:32,237 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:32,254 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:32,268 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:32,284 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:32,298 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:32,314 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:32,328 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:32,346 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:32,367 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-22 17:41:34,350 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small "HTTP/1.1 200 OK"
+2026-08-22 17:41:34,420 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:34,434 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:34,457 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+
+config.json:   0%|          | 0.00/200 [00:00<?, ?B/s][A
+config.json: 100%|██████████| 200/200 [00:00<00:00, 1.27MB/s]
+2026-08-22 17:41:34,475 [INFO] HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/2_Normalize/config.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:34,530 [INFO] HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-small "HTTP/1.1 200 OK"
+2026-08-22 17:41:34,675 [INFO] PyTorch embedding model loaded (dim=384).
+2026-08-22 17:41:38,932 [INFO] Loaded index 'passage_native' (148545 vectors) from /home/user/app/data/indexes
+2026-08-22 17:41:38,969 [INFO] Loaded index 'semantic_longdoc' (360 vectors) from /home/user/app/data/indexes
+2026-08-22 17:41:38,971 [INFO] Loaded centroids for: ['as', 'bn', 'gu', 'hi', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'ta', 'te', 'ur', 'en']
+2026-08-22 17:41:39,011 [INFO] Initialized SarvamAI STT client successfully.
+2026-08-22 17:41:39,011 [INFO] Loading Prompt-Guard tokenizer from 'prompt-security/Prompt-Guard-86M_onnx'...
+2026-08-22 17:41:39,029 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:39,044 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:39,060 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/config.json "HTTP/1.1 200 OK"
+
+config.json:   0%|          | 0.00/1.01k [00:00<?, ?B/s][A
+config.json: 100%|██████████| 1.01k/1.01k [00:00<00:00, 7.38MB/s]
+2026-08-22 17:41:39,086 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:39,101 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:39,117 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/tokenizer_config.json "HTTP/1.1 200 OK"
+
+tokenizer_config.json:   0%|          | 0.00/1.48k [00:00<?, ?B/s][A
+tokenizer_config.json: 100%|██████████| 1.48k/1.48k [00:00<00:00, 11.7MB/s]
+2026-08-22 17:41:39,138 [INFO] HTTP Request: GET https://huggingface.co/api/models/prompt-security/Prompt-Guard-86M_onnx/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:39,161 [INFO] HTTP Request: GET https://huggingface.co/api/models/prompt-security/Prompt-Guard-86M_onnx/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-22 17:41:39,177 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/spm.model "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:39,218 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/tokenizer.json "HTTP/1.1 302 Found"
+2026-08-22 17:41:39,233 [INFO] HTTP Request: GET https://huggingface.co/api/models/prompt-security/Prompt-Guard-86M_onnx/xet-read-token/d4969146c09a48dc6b41e16b850f4a1d32f41be6 "HTTP/1.1 200 OK"
+
+tokenizer.json:   0%|          | 0.00/16.3M [00:00<?, ?B/s][A
+tokenizer.json: 100%|██████████| 16.3M/16.3M [00:00<00:00, 41.8MB/s]
+2026-08-22 17:41:39,642 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:39,658 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/special_tokens_map.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-22 17:41:39,671 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/special_tokens_map.json "HTTP/1.1 200 OK"
+2026-08-22 17:41:39,695 [INFO] HTTP Request: GET https://huggingface.co/api/resolve-cache/models/prompt-security/Prompt-Guard-86M_onnx/d4969146c09a48dc6b41e16b850f4a1d32f41be6/special_tokens_map.json "HTTP/1.1 200 OK"
+
+special_tokens_map.json:   0%|          | 0.00/970 [00:00<?, ?B/s][A
+special_tokens_map.json: 100%|██████████| 970/970 [00:00<00:00, 3.60MB/s]
+2026-08-22 17:41:39,712 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+2026-08-22 17:41:40,651 [INFO] HTTP Request: GET https://huggingface.co/api/models/prompt-security/Prompt-Guard-86M_onnx "HTTP/1.1 200 OK"
+2026-08-22 17:41:40,652 [INFO] Local ONNX file /home/user/app/data/onnx_models/prompt_guard_86m.onnx not found. Checking huggingface hub cache...
+2026-08-22 17:41:40,671 [INFO] HTTP Request: HEAD https://huggingface.co/prompt-security/Prompt-Guard-86M_onnx/resolve/main/model.onnx "HTTP/1.1 302 Found"
+
+model.onnx:   0%|          | 0.00/1.12G [00:00<?, ?B/s][A
+model.onnx:  48%|████▊     | 536M/1.12G [00:01<00:01, 425MB/s][A
+model.onnx: 100%|██████████| 1.12G/1.12G [00:01<00:00, 774MB/s]
+2026-08-22 17:41:42,115 [INFO] Loading Prompt-Guard ONNX session from: /home/user/.cache/huggingface/hub/models--prompt-security--Prompt-Guard-86M_onnx/snapshots/d4969146c09a48dc6b41e16b850f4a1d32f41be6/model.onnx (threads=4)
+2026-08-22 17:41:44,452 [INFO] PromptGuardDetector initialized with ONNX Runtime in 5440.39ms
+2026-08-22 17:41:44,508 [INFO] PromptGuardDetector warmed up successfully.
+2026-08-22 17:41:44,508 [INFO] Initializing full RAG pipeline warmup...
+2026-08-22 17:41:44,970 [INFO] PromptGuardDetector warmed up successfully.
+2026-08-22 17:41:45,027 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:41:45,028 [INFO] RAG pipeline warmup completed in 519.63ms. System ready.
+2026-08-22 17:41:45,028 [INFO] Initializing full RAG pipeline warmup...
+2026-08-22 17:41:45,498 [INFO] PromptGuardDetector warmed up successfully.
+2026-08-22 17:41:45,554 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+[Space Startup] Full RAG pipeline preloaded and ready for traffic.
+2026-08-22 17:41:45,555 [INFO] RAG pipeline warmup completed in 526.98ms. System ready.
+2026-08-22 17:41:45,577 [INFO] HTTP Request: HEAD https://huggingface.co/api/telemetry/gradio/initiated "HTTP/1.1 200 OK"
+
+ZeroGPU tensors packing:   0%|          | 0.00/471M [00:00<?, ?B/s][A2026-08-22 17:41:45,831 [INFO] HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+ZeroGPU tensors packing: 100%|██████████| 471M/471M [00:00<00:00, 1.66GB/s]
+Cleaned 0.44GB of tensor files from /home/user/.cache/huggingface/hub/models--*/blobs/* after packing
+2026-08-22 17:41:46,576 [INFO] HTTP Request: POST http://device-api.zero/startup-report "HTTP/1.1 200 OK"
+* Running on local URL:  http://0.0.0.0:7860, with SSR ⚡ (experimental, to disable set `ssr=False` in `launch()`)
+2026-08-22 17:41:46,798 [INFO] HTTP Request: GET http://localhost:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-08-22 17:41:47,013 [INFO] HTTP Request: HEAD http://0.0.0.0:7861/ "HTTP/1.1 200 OK"
+2026-08-22 17:41:47,015 [INFO] HTTP Request: HEAD http://localhost:7860/ "HTTP/1.1 200 OK"
+
+To create a public link, set `share=True` in `launch()`.
+2026-08-22 17:41:47,029 [INFO] HTTP Request: HEAD https://huggingface.co/api/telemetry/gradio/launched "HTTP/1.1 200 OK"
+2026-08-22 17:41:52,796 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:00,010 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:07,282 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:14,568 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:21,814 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:29,037 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:36,309 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:43,578 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:49,523 [INFO] HTTP Request: HEAD http://0.0.0.0:7861/ "HTTP/1.1 200 OK"
+2026-08-22 17:42:49,847 [INFO] HTTP Request: GET http://0.0.0.0:7861/api/config "HTTP/1.1 200 OK"
+2026-08-22 17:42:50,368 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:42:50,805 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:42:50,885 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.local "HTTP/1.1 200 OK"
+2026-08-22 17:42:51,397 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.production "HTTP/1.1 200 OK"
+2026-08-22 17:42:51,909 [INFO] HTTP Request: GET http://0.0.0.0:7861/.streamlit/secrets.toml "HTTP/1.1 200 OK"
+2026-08-22 17:42:52,980 [INFO] HTTP Request: GET http://0.0.0.0:7861/file=../.env "HTTP/1.1 200 OK"
+2026-08-22 17:42:53,496 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:42:54,855 [INFO] HTTP Request: GET http://0.0.0.0:7861/openapi.json "HTTP/1.1 200 OK"
+Too little data for declared Content-Length
+SvelteKitError: POST method not allowed. No actions exist for this page
+at handle_action_json_request (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:926:30)
+at render_page (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:2577:12)
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+at async resolve2 (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3705:24)
+at async respond (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3596:22)
+at async Array.ssr (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/handler.js:1261:3) {
+status: 405,
+text: 'Method Not Allowed'
+}
+2026-08-22 17:43:02,396 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:43:08,053 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:43:10,262 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:44:28,532 [INFO] HTTP Request: HEAD http://0.0.0.0:7861/ "HTTP/1.1 200 OK"
+2026-08-22 17:44:28,602 [INFO] HTTP Request: GET http://0.0.0.0:7861/api/config "HTTP/1.1 200 OK"
+2026-08-22 17:44:28,692 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:28,762 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.local "HTTP/1.1 200 OK"
+2026-08-22 17:44:28,832 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.production "HTTP/1.1 200 OK"
+2026-08-22 17:44:28,911 [INFO] HTTP Request: GET http://0.0.0.0:7861/.streamlit/secrets.toml "HTTP/1.1 200 OK"
+2026-08-22 17:44:29,121 [INFO] HTTP Request: GET http://0.0.0.0:7861/file=../.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:29,183 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:29,364 [INFO] HTTP Request: GET http://0.0.0.0:7861/openapi.json "HTTP/1.1 200 OK"
+Too little data for declared Content-Length
+SvelteKitError: POST method not allowed. No actions exist for this page
+at handle_action_json_request (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:926:30)
+at render_page (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:2577:12)
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+at async resolve2 (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3705:24)
+at async respond (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3596:22)
+at async Array.ssr (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/handler.js:1261:3) {
+status: 405,
+text: 'Method Not Allowed'
+}
+2026-08-22 17:44:51,513 [INFO] HTTP Request: HEAD http://0.0.0.0:7861/ "HTTP/1.1 200 OK"
+2026-08-22 17:44:51,838 [INFO] HTTP Request: GET http://0.0.0.0:7861/api/config "HTTP/1.1 200 OK"
+2026-08-22 17:44:52,361 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:52,869 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.local "HTTP/1.1 200 OK"
+2026-08-22 17:44:53,378 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env.production "HTTP/1.1 200 OK"
+2026-08-22 17:44:53,880 [INFO] HTTP Request: GET http://0.0.0.0:7861/.streamlit/secrets.toml "HTTP/1.1 200 OK"
+2026-08-22 17:44:54,954 [INFO] HTTP Request: GET http://0.0.0.0:7861/file=../.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:55,468 [INFO] HTTP Request: GET http://0.0.0.0:7861/.env "HTTP/1.1 200 OK"
+2026-08-22 17:44:56,824 [INFO] HTTP Request: GET http://0.0.0.0:7861/openapi.json "HTTP/1.1 200 OK"
+Too little data for declared Content-Length
+SvelteKitError: POST method not allowed. No actions exist for this page
+at handle_action_json_request (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:926:30)
+at render_page (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:2577:12)
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+at async resolve2 (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3705:24)
+at async respond (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/server/index.js:3596:22)
+at async Array.ssr (file:///usr/local/lib/python3.10/site-packages/gradio/templates/node/build/handler.js:1261:3) {
+status: 405,
+text: 'Method Not Allowed'
+}
+2026-08-22 17:45:03,704 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:45:05,859 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:45:08,112 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:45:10,368 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:46:35,287 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:46:37,492 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+2026-08-22 17:46:39,743 [INFO] Off-topic guardrail triggered: Classified off-topic: query distance to corpus centroid (1.0000, own_lang: 1.0) exceeds threshold (0.5500)
+
+STDERR:

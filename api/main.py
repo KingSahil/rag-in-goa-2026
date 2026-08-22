@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -125,55 +125,63 @@ async def get_supported_languages() -> Dict[str, Any]:
 
 
 @app.post("/query", response_model=QueryResponse)
-async def query_pipeline(
-    file: Optional[UploadFile] = File(None),
-    text: Optional[str] = Form(None),
-    language_hint: Optional[str] = Form(None),
-    cross_lingual: Optional[bool] = Form(False),
-    request_body: Optional[QueryRequest] = None,
-) -> QueryResponse:
+@app.post("/api/query", response_model=QueryResponse)
+async def query_pipeline(request: Request) -> QueryResponse:
     """
     Execute end-to-end Voice RAG query with strict deadline timeout protection.
     Accepts:
-    1. Multipart file upload ('file') with optional 'language_hint' and 'cross_lingual'
-    2. Multipart form text ('text') with optional 'language_hint' and 'cross_lingual'
-    3. JSON body with text / audio_path / language_hint / cross_lingual
+    1. JSON body with text / audio_path / audio_base64 / language_hint / cross_lingual
+    2. Multipart form data with file / text / language_hint / cross_lingual
     """
     orchestrator = get_orchestrator()
     temp_audio_path = None
     
     try:
         req: Optional[QueryRequest] = None
+        content_type = request.headers.get("content-type", "").lower()
         
-        # 1. Handle JSON request body
-        if request_body and (request_body.text or request_body.audio_path):
-            req = request_body
-            
-        # 2. Handle Multipart audio upload
-        elif file and file.filename:
-            suffix = Path(file.filename).suffix or ".wav"
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                shutil.copyfileobj(file.file, tmp)
-                temp_audio_path = tmp.name
-                
+        if "application/json" in content_type:
+            body = await request.json()
+            if body.get("audio_base64"):
+                import base64
+                audio_bytes = base64.b64decode(body["audio_base64"])
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                    tmp.write(audio_bytes)
+                    temp_audio_path = tmp.name
             req = QueryRequest(
-                audio_path=temp_audio_path,
-                language_hint=language_hint,
-                cross_lingual=False if cross_lingual is None else cross_lingual,
+                audio_path=temp_audio_path or body.get("audio_path"),
+                text=body.get("text"),
+                language_hint=body.get("language_hint"),
+                cross_lingual=bool(body.get("cross_lingual", False)),
+                bypass_cache=bool(body.get("bypass_cache", False)),
             )
-            
-        # 3. Handle Multipart Form text bypass
-        elif text and text.strip():
-            req = QueryRequest(
-                text=text.strip(),
-                language_hint=language_hint,
-                cross_lingual=False if cross_lingual is None else cross_lingual,
-            )
-            
-        if not req:
+        else:
+            form = await request.form()
+            file = form.get("file")
+            text = form.get("text")
+            language_hint = form.get("language_hint")
+            cross_lingual = form.get("cross_lingual")
+            if file and hasattr(file, "file"):
+                suffix = Path(getattr(file, "filename", "audio.wav")).suffix or ".wav"
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                    shutil.copyfileobj(file.file, tmp)
+                    temp_audio_path = tmp.name
+                req = QueryRequest(
+                    audio_path=temp_audio_path,
+                    language_hint=str(language_hint) if language_hint else None,
+                    cross_lingual=str(cross_lingual).lower() in ("true", "1") if cross_lingual is not None else False,
+                )
+            elif text and str(text).strip():
+                req = QueryRequest(
+                    text=str(text).strip(),
+                    language_hint=str(language_hint) if language_hint else None,
+                    cross_lingual=str(cross_lingual).lower() in ("true", "1") if cross_lingual is not None else False,
+                )
+
+        if not req or (not req.text and not req.audio_path):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Either 'file' audio upload or 'text' query must be provided.",
+                detail="Either 'file' audio upload, 'audio_base64', or 'text' query must be provided.",
             )
 
         # Enforce request deadline with asyncio.wait_for
@@ -201,6 +209,7 @@ async def query_pipeline(
 
 
 @app.post("/tts")
+@app.post("/api/tts")
 async def generate_speech_audio(req: TTSRequest):
     """
     Synthesizes speech audio from text using Sarvam Bulbul TTS.

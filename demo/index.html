@@ -718,6 +718,21 @@
   <script>
     // Direct ZeroGPU / Gradio 5 API Bridge fetcher (handles both HF Space iframe & local Gradio deployment)
     async function apiFetch(path, options = {}) {
+      // 1. First prioritize fast, direct REST routes (/api/query, /query, /api/tts, /tts, /health, /languages)
+      const endpoints = path.startsWith('/api') 
+        ? [path, path.replace('/api', '')] 
+        : ['/api' + path, path];
+      
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, options);
+          if (res.ok) {
+            return res;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fallback to Gradio ZeroGPU Bridge if direct REST is unavailable
       if (path.includes('/query')) {
         try {
           let payloadObj = {};
@@ -762,10 +777,10 @@
               const es = new EventSource('/gradio_api/call/rag_query/' + event_id);
               
               const handleEventData = (rawDataStr) => {
-                if (isDone) return;
+                if (isDone || !rawDataStr) return;
                 try {
                   const dataArr = JSON.parse(rawDataStr);
-                  const raw = dataArr[0];
+                  const raw = Array.isArray(dataArr) ? dataArr[0] : dataArr;
                   const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
                   if (parsed && (parsed.answer !== undefined || parsed.answer_source !== undefined || parsed.status !== undefined)) {
                     isDone = true;
@@ -782,15 +797,12 @@
                 return false;
               };
 
-              es.onmessage = (e) => {
-                handleEventData(e.data);
-              };
-              es.addEventListener('complete', (e) => {
-                handleEventData(e.data);
-              });
+              es.onmessage = (e) => handleEventData(e.data);
+              es.addEventListener('generating', (e) => handleEventData(e.data));
+              es.addEventListener('complete', (e) => handleEventData(e.data));
+              es.addEventListener('data', (e) => handleEventData(e.data));
               es.addEventListener('error', (e) => {
                 if (!isDone) {
-                  // If EventSource closed after getting data, do nothing
                   setTimeout(() => {
                     if (!isDone) {
                       isDone = true;
@@ -798,7 +810,7 @@
                       try { es.close(); } catch(err){}
                       reject(new Error("ZeroGPU EventSource connection closed"));
                     }
-                  }, 500);
+                  }, 800);
                 }
               });
             });
@@ -834,10 +846,10 @@
               const es = new EventSource('/gradio_api/call/tts_query/' + event_id);
               
               const handleTTSData = (rawDataStr) => {
-                if (isDone) return;
+                if (isDone || !rawDataStr) return;
                 try {
                   const dataArr = JSON.parse(rawDataStr);
-                  const raw = dataArr[0];
+                  const raw = Array.isArray(dataArr) ? dataArr[0] : dataArr;
                   const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
                   if (parsed) {
                     isDone = true;
@@ -854,12 +866,10 @@
                 return false;
               };
 
-              es.onmessage = (e) => {
-                handleTTSData(e.data);
-              };
-              es.addEventListener('complete', (e) => {
-                handleTTSData(e.data);
-              });
+              es.onmessage = (e) => handleTTSData(e.data);
+              es.addEventListener('generating', (e) => handleTTSData(e.data));
+              es.addEventListener('complete', (e) => handleTTSData(e.data));
+              es.addEventListener('data', (e) => handleTTSData(e.data));
               es.addEventListener('error', (e) => {
                 if (!isDone) {
                   setTimeout(() => {
@@ -867,9 +877,9 @@
                       isDone = true;
                       clearTimeout(timeout);
                       try { es.close(); } catch(err){}
-                      reject(new Error("ZeroGPU TTS EventSource connection closed"));
+                      reject(new Error("TTS EventSource connection closed"));
                     }
-                  }, 500);
+                  }, 800);
                 }
               });
             });

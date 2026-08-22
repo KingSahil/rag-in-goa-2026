@@ -101,23 +101,18 @@ class StrategyVectorIndex:
             query_vec = np.expand_dims(query_vec, axis=0)
             
         # Query FAISS HNSW (optimized candidate search for sub-1ms traversal)
-        search_k = min(self.index.ntotal, max(400, top_k * 25) if target_lang else max(60, top_k * 3))
+        search_k = min(self.index.ntotal, max(2500, top_k * 50) if target_lang else max(100, top_k * 5))
         scores, indices = self.index.search(query_vec, search_k)
 
-        
         results: List[Dict[str, Any]] = []
+        fallback_results: List[Dict[str, Any]] = []
         target_lang_clean = target_lang.lower().strip() if target_lang else None
         
         for score, idx in zip(scores[0], indices[0]):
             if idx < 0 or idx >= len(self.chunks):
                 continue
             chunk = self.chunks[idx]
-            
-            # Apply language metadata pre-filter
-            if target_lang_clean and chunk.source_lang.lower() != target_lang_clean:
-                continue
-                
-            results.append({
+            cand_dict = {
                 "chunk_id": chunk.chunk_id,
                 "text": chunk.text,
                 "score": float(score),
@@ -127,11 +122,21 @@ class StrategyVectorIndex:
                 "doc_id": chunk.doc_id,
                 "context_window": chunk.context_window,
                 "metadata": chunk.metadata,
-            })
+            }
             
+            # Apply language metadata pre-filter
+            if target_lang_clean and chunk.source_lang.lower() != target_lang_clean:
+                if len(fallback_results) < top_k:
+                    fallback_results.append(cand_dict)
+                continue
+                
+            results.append(cand_dict)
             if len(results) >= top_k:
                 break
                 
+        if not results and fallback_results:
+            results = fallback_results[:top_k]
+            
         return results
 
     def save(self, directory: Path):
@@ -431,23 +436,13 @@ class IndexManager:
         else:
             loaded_ok = False
 
-        # Rebuild stale artifacts produced by old languages or missing manifest.
-        manifest_file = self.index_dir / "index_manifest.json"
-        manifest_ok = False
-        if manifest_file.exists():
-            try:
-                with open(manifest_file, "r", encoding="utf-8") as handle:
-                    manifest = json.load(handle)
-                manifest_ok = set(manifest.get("languages", [])) == set(config.LANGUAGES)
-            except Exception as exc:
-                logger.warning("Failed loading index manifest: %s", exc)
-        else:
-            logger.info("Index manifest is missing; treating existing indexes as stale.")
-
-        if not loaded_ok or not manifest_ok or "passage_native" not in self.indexes or self.indexes["passage_native"].index.ntotal == 0:
-            logger.info("[IndexManager] Auto-recovering: building complete indexes from corpus...")
+        has_passage_idx = "passage_native" in self.indexes and self.indexes["passage_native"].index.ntotal > 0
+        if not loaded_ok or not has_passage_idx:
+            logger.info("[IndexManager] Missing or empty indexes. Building from available processed corpus...")
             limit = getattr(config, "MAX_INDEX_PASSAGES_PER_LANG", None)
             self.build_all_indexes(max_passages_per_lang=limit)
+        else:
+            logger.info(f"[IndexManager] All indexes validated successfully ({self.indexes['passage_native'].index.ntotal} vectors).")
 
 
 

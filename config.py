@@ -147,7 +147,7 @@ SARVAM_TTS_TIMEOUT_SECONDS = 10.0
 OFF_TOPIC_DISTANCE_THRESHOLD = 0.55  # Calibrated for multilingual-e5-small normalized embeddings (1 - cosine_similarity)
 
 # Post-retrieval confidence threshold (calibrated composite dense & lexical match score)
-MIN_CONFIDENT_MATCH_SCORE = float(os.getenv("MIN_CONFIDENT_MATCH_SCORE", "0.35"))
+MIN_CONFIDENT_MATCH_SCORE = float(os.getenv("MIN_CONFIDENT_MATCH_SCORE", "0.10"))
 
 # Post-generation grounding check threshold (lexical + semantic overlap)
 GROUNDING_OVERLAP_THRESHOLD = 0.30

@@ -389,11 +389,11 @@ def check_unsafe_content(
 
 def check_off_topic_query(
     query_text: str,
-    query_vector: np.ndarray,
-    centroids: Dict[str, np.ndarray],
-    global_centroid: Optional[np.ndarray] = None,
+    query_vector: Any,
+    centroids: Dict[str, Any],
+    global_centroid: Optional[Any] = None,
     language_hint: Optional[str] = None,
-    threshold: float = config.OFF_TOPIC_DISTANCE_THRESHOLD,
+    threshold: float = getattr(config, "OFF_TOPIC_DISTANCE_THRESHOLD", 0.65),
 ) -> Tuple[bool, float, Optional[str]]:
     """
     Check 2: Computes cosine distance from query vector to corpus centroid.
@@ -404,35 +404,48 @@ def check_off_topic_query(
     Returns:
         (is_on_topic, min_distance, reason)
     """
-    if query_vector.ndim == 2:
-        q_vec = query_vector[0]
-    else:
-        q_vec = query_vector
-        
-    q_norm = q_vec / (np.linalg.norm(q_vec) + 1e-9)
+    if query_vector is None:
+        return True, 0.0, None
+
+    q_vec = np.asarray(query_vector, dtype=np.float32).flatten()
+    q_norm_val = float(np.linalg.norm(q_vec))
+    if q_norm_val < 1e-9:
+        return True, 0.0, None
+    q_norm = q_vec / q_norm_val
     
     # Check distance to language-specific centroid if available
     distances = []
     own_lang_dist = None
     
     if language_hint and language_hint.lower() in centroids:
-        c_vec = centroids[language_hint.lower()]
-        sim = float(np.dot(q_norm, c_vec))
-        own_lang_dist = max(0.0, 1.0 - sim)
-        distances.append(own_lang_dist)
+        c_raw = np.asarray(centroids[language_hint.lower()], dtype=np.float32).flatten()
+        c_norm_val = float(np.linalg.norm(c_raw))
+        if c_norm_val > 1e-9:
+            c_norm = c_raw / c_norm_val
+            sim = float(np.dot(q_norm, c_norm))
+            own_lang_dist = max(0.0, 1.0 - sim)
+            distances.append(own_lang_dist)
         
     # Also check all language centroids
-    for lang, c_vec in centroids.items():
+    for lang, c_val in centroids.items():
         if language_hint and lang == language_hint.lower():
             continue
-        sim = float(np.dot(q_norm, c_vec))
-        dist = max(0.0, 1.0 - sim)
-        distances.append(dist)
+        c_raw = np.asarray(c_val, dtype=np.float32).flatten()
+        c_norm_val = float(np.linalg.norm(c_raw))
+        if c_norm_val > 1e-9:
+            c_norm = c_raw / c_norm_val
+            sim = float(np.dot(q_norm, c_norm))
+            dist = max(0.0, 1.0 - sim)
+            distances.append(dist)
         
     if global_centroid is not None:
-        sim = float(np.dot(q_norm, global_centroid))
-        dist = max(0.0, 1.0 - sim)
-        distances.append(dist)
+        c_raw = np.asarray(global_centroid, dtype=np.float32).flatten()
+        c_norm_val = float(np.linalg.norm(c_raw))
+        if c_norm_val > 1e-9:
+            c_norm = c_raw / c_norm_val
+            sim = float(np.dot(q_norm, c_norm))
+            dist = max(0.0, 1.0 - sim)
+            distances.append(dist)
         
     if not distances:
         # If no centroids available, default to on-topic
