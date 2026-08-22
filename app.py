@@ -388,4 +388,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "7860"))
     host = os.getenv("HOST", "0.0.0.0")
     print(f"🌴 Starting Hacker House Goa Command Center UI on http://{host}:{port}")
-    demo.queue().launch(server_name=host, server_port=port, ssr=False)
+    demo.queue().launch(server_name=host, server_port=port)
