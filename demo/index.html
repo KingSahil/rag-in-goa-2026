@@ -753,18 +753,45 @@
           });
           if (callRes.ok) {
             const { event_id } = await callRes.json();
-            const streamRes = await fetch('/gradio_api/call/rag_query/' + event_id);
-            const streamText = await streamRes.text();
-            const match = streamText.match(/data:\s*(\[.*\])/);
-            if (match) {
-              const rawData = JSON.parse(match[1])[0];
-              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-              return {
-                status: 200,
-                ok: true,
-                json: async () => parsed
+            return new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                es.close();
+                reject(new Error("Query timed out"));
+              }, 45000);
+
+              const es = new EventSource('/gradio_api/call/rag_query/' + event_id);
+              
+              const handleEventData = (rawDataStr) => {
+                try {
+                  const dataArr = JSON.parse(rawDataStr);
+                  const raw = dataArr[0];
+                  const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                  if (parsed && (parsed.answer || parsed.answer_source || parsed.status)) {
+                    clearTimeout(timeout);
+                    es.close();
+                    resolve({
+                      status: 200,
+                      ok: true,
+                      json: async () => parsed
+                    });
+                    return true;
+                  }
+                } catch(e) {}
+                return false;
               };
-            }
+
+              es.onmessage = (e) => {
+                handleEventData(e.data);
+              };
+              es.addEventListener('complete', (e) => {
+                handleEventData(e.data);
+              });
+              es.addEventListener('error', (e) => {
+                clearTimeout(timeout);
+                es.close();
+                reject(new Error("ZeroGPU EventSource connection closed"));
+              });
+            });
           }
         } catch (e) {
           console.warn("Gradio API fallback query error:", e);
@@ -784,18 +811,45 @@
           });
           if (callRes.ok) {
             const { event_id } = await callRes.json();
-            const streamRes = await fetch('/gradio_api/call/tts_query/' + event_id);
-            const streamText = await streamRes.text();
-            const match = streamText.match(/data:\s*(\[.*\])/);
-            if (match) {
-              const rawData = JSON.parse(match[1])[0];
-              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-              return {
-                status: 200,
-                ok: true,
-                json: async () => parsed
+            return new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                es.close();
+                reject(new Error("TTS timed out"));
+              }, 20000);
+
+              const es = new EventSource('/gradio_api/call/tts_query/' + event_id);
+              
+              const handleTTSData = (rawDataStr) => {
+                try {
+                  const dataArr = JSON.parse(rawDataStr);
+                  const raw = dataArr[0];
+                  const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                  if (parsed) {
+                    clearTimeout(timeout);
+                    es.close();
+                    resolve({
+                      status: 200,
+                      ok: true,
+                      json: async () => parsed
+                    });
+                    return true;
+                  }
+                } catch(e) {}
+                return false;
               };
-            }
+
+              es.onmessage = (e) => {
+                handleTTSData(e.data);
+              };
+              es.addEventListener('complete', (e) => {
+                handleTTSData(e.data);
+              });
+              es.addEventListener('error', (e) => {
+                clearTimeout(timeout);
+                es.close();
+                reject(new Error("ZeroGPU TTS EventSource connection closed"));
+              });
+            });
           }
         } catch (e) {
           console.warn("Gradio API fallback TTS error:", e);
