@@ -88,10 +88,16 @@ class RAGPipelineOrchestrator:
                             raise stt_err
                         await asyncio.sleep(0.1)
                         
-                transcript = stt_res.get("transcript", "")
+                transcript = (stt_res.get("transcript", "") if stt_res else "").strip()
+                fallback_used = stt_res.get("is_fallback", False) if stt_res else False
+                
+                # If audio transcription was blank but client text transcript was supplied
+                if not transcript and request.text and request.text.strip():
+                    transcript = request.text.strip()
+                    fallback_used = True
+                
                 raw_query_text = transcript
-                language = stt_res.get("language_code", language)
-                fallback_used = stt_res.get("is_fallback", False)
+                language = (stt_res.get("language_code") if stt_res else None) or language
                 
                 timings.append(StageTiming(
                     stage="stt_transcription",
@@ -101,23 +107,35 @@ class RAGPipelineOrchestrator:
                     details=f"Transcribed via Sarvam Saaras v3 ({language})",
                 ))
             except Exception as e:
-                timings.append(StageTiming(
-                    stage="stt_transcription",
-                    ms=round((time.perf_counter() - stt_start_t) * 1000, 2),
-                    success=False,
-                    fallback_used=True,
-                    details=f"STT Error: {str(e)}",
-                ))
-                guardrails.decline_reason_code = "STT_ERROR"
-                return self._build_declined_response(
-                    query=raw_query_text,
-                    transcript=transcript,
-                    language=language,
-                    reason=f"STT processing failed: {e}",
-                    guardrails=guardrails,
-                    timings=timings,
-                    start_t=start_pipeline_t,
-                )
+                # If audio transcription fails, recover with client text transcript if present
+                if request.text and request.text.strip():
+                    raw_query_text = request.text.strip()
+                    transcript = raw_query_text
+                    timings.append(StageTiming(
+                        stage="stt_transcription",
+                        ms=round((time.perf_counter() - stt_start_t) * 1000, 2),
+                        success=True,
+                        fallback_used=True,
+                        details=f"STT Exception ({e}), recovered with client transcript",
+                    ))
+                else:
+                    timings.append(StageTiming(
+                        stage="stt_transcription",
+                        ms=round((time.perf_counter() - stt_start_t) * 1000, 2),
+                        success=False,
+                        fallback_used=True,
+                        details=f"STT Error: {str(e)}",
+                    ))
+                    guardrails.decline_reason_code = "STT_ERROR"
+                    return self._build_declined_response(
+                        query=raw_query_text,
+                        transcript=transcript,
+                        language=language,
+                        reason=f"STT processing failed: {e}",
+                        guardrails=guardrails,
+                        timings=timings,
+                        start_t=start_pipeline_t,
+                    )
         else:
             raw_query_text = (request.text or "").strip()
             transcript = raw_query_text

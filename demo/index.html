@@ -716,32 +716,28 @@
 
   <!-- ==================== CLIENT INTERACTION JAVASCRIPT ==================== -->
   <script>
-    // Robust dual-path API Fetcher (bypasses SvelteKit proxy on HF Spaces while maintaining local support)
+    // Direct ZeroGPU / Gradio 5 API Bridge fetcher (handles both HF Space iframe & local Gradio deployment)
     async function apiFetch(path, options = {}) {
-      const endpoints = path.startsWith('/api') 
-        ? [path, path.replace('/api', '')] 
-        : ['/api' + path, path];
-      
-      let lastErr = null;
-      for (const ep of endpoints) {
-        try {
-          const res = await fetch(ep, options);
-          if (res.status === 200) {
-            return res;
-          }
-        } catch (e) {
-          lastErr = e;
-        }
-      }
-
-      // Gradio 5 ZeroGPU API Bridge Fallback (for Hugging Face Spaces)
       if (path.includes('/query')) {
         try {
           let payloadObj = {};
           if (options.body instanceof FormData) {
-            options.body.forEach((val, key) => {
-              if (typeof val === 'string') payloadObj[key] = val;
-            });
+            for (const [key, val] of options.body.entries()) {
+              if (typeof val === 'string') {
+                payloadObj[key] = val;
+              } else if (val && typeof val === 'object') {
+                const base64Audio = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    const res = reader.result;
+                    const b64 = typeof res === 'string' ? res.split(',')[1] : '';
+                    resolve(b64);
+                  };
+                  reader.readAsDataURL(val);
+                });
+                payloadObj["audio_base64"] = base64Audio;
+              }
+            }
           } else if (typeof options.body === 'string') {
             payloadObj = JSON.parse(options.body);
           }
@@ -754,21 +750,27 @@
           if (callRes.ok) {
             const { event_id } = await callRes.json();
             return new Promise((resolve, reject) => {
+              let isDone = false;
               const timeout = setTimeout(() => {
-                es.close();
-                reject(new Error("Query timed out"));
+                if (!isDone) {
+                  isDone = true;
+                  try { es.close(); } catch(e){}
+                  reject(new Error("Query timed out"));
+                }
               }, 45000);
 
               const es = new EventSource('/gradio_api/call/rag_query/' + event_id);
               
               const handleEventData = (rawDataStr) => {
+                if (isDone) return;
                 try {
                   const dataArr = JSON.parse(rawDataStr);
                   const raw = dataArr[0];
                   const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                  if (parsed && (parsed.answer || parsed.answer_source || parsed.status)) {
+                  if (parsed && (parsed.answer !== undefined || parsed.answer_source !== undefined || parsed.status !== undefined)) {
+                    isDone = true;
                     clearTimeout(timeout);
-                    es.close();
+                    try { es.close(); } catch(e){}
                     resolve({
                       status: 200,
                       ok: true,
@@ -787,14 +789,22 @@
                 handleEventData(e.data);
               });
               es.addEventListener('error', (e) => {
-                clearTimeout(timeout);
-                es.close();
-                reject(new Error("ZeroGPU EventSource connection closed"));
+                if (!isDone) {
+                  // If EventSource closed after getting data, do nothing
+                  setTimeout(() => {
+                    if (!isDone) {
+                      isDone = true;
+                      clearTimeout(timeout);
+                      try { es.close(); } catch(err){}
+                      reject(new Error("ZeroGPU EventSource connection closed"));
+                    }
+                  }, 500);
+                }
               });
             });
           }
         } catch (e) {
-          console.warn("Gradio API fallback query error:", e);
+          console.warn("Gradio API bridge query note:", e);
         }
       }
 
@@ -812,21 +822,27 @@
           if (callRes.ok) {
             const { event_id } = await callRes.json();
             return new Promise((resolve, reject) => {
+              let isDone = false;
               const timeout = setTimeout(() => {
-                es.close();
-                reject(new Error("TTS timed out"));
+                if (!isDone) {
+                  isDone = true;
+                  try { es.close(); } catch(e){}
+                  reject(new Error("TTS timed out"));
+                }
               }, 20000);
 
               const es = new EventSource('/gradio_api/call/tts_query/' + event_id);
               
               const handleTTSData = (rawDataStr) => {
+                if (isDone) return;
                 try {
                   const dataArr = JSON.parse(rawDataStr);
                   const raw = dataArr[0];
                   const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
                   if (parsed) {
+                    isDone = true;
                     clearTimeout(timeout);
-                    es.close();
+                    try { es.close(); } catch(e){}
                     resolve({
                       status: 200,
                       ok: true,
@@ -845,9 +861,16 @@
                 handleTTSData(e.data);
               });
               es.addEventListener('error', (e) => {
-                clearTimeout(timeout);
-                es.close();
-                reject(new Error("ZeroGPU TTS EventSource connection closed"));
+                if (!isDone) {
+                  setTimeout(() => {
+                    if (!isDone) {
+                      isDone = true;
+                      clearTimeout(timeout);
+                      try { es.close(); } catch(err){}
+                      reject(new Error("ZeroGPU TTS EventSource connection closed"));
+                    }
+                  }, 500);
+                }
               });
             });
           }
@@ -856,12 +879,28 @@
         }
       }
 
+      // Fallback for standalone FastAPI server if not running inside Gradio
+      const endpoints = path.startsWith('/api') 
+        ? [path, path.replace('/api', '')] 
+        : ['/api' + path, path];
+      
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, options);
+          if (res.status === 200) {
+            return res;
+          }
+        } catch (e) {}
+      }
+
       return await fetch(path, options);
     }
 
     // State
     let isRecording = false;
     let mediaRecorder = null;
+    let liveSpeechRec = null;
+    let liveRecognizedText = "";
     let audioChunks = [];
     let audioContext = null;
     let analyser = null;
@@ -1649,6 +1688,43 @@
         return;
       }
       stopTTS();
+      liveRecognizedText = "";
+
+      const voiceOutLangSelect = document.getElementById("voiceOutLangSelect");
+      const targetHint = (isImmersiveMode && voiceOutLangSelect) ? voiceOutLangSelect.value : langSelect.value;
+
+      // Start browser Web Speech Recognition for live visual feedback & fallback
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        try {
+          liveSpeechRec = new SpeechRec();
+          liveSpeechRec.continuous = true;
+          liveSpeechRec.interimResults = true;
+          if (targetHint === "hi") liveSpeechRec.lang = "hi-IN";
+          else if (targetHint === "mr") liveSpeechRec.lang = "mr-IN";
+          else if (targetHint === "ta") liveSpeechRec.lang = "ta-IN";
+          else if (targetHint === "te") liveSpeechRec.lang = "te-IN";
+          else if (targetHint === "en") liveSpeechRec.lang = "en-IN";
+          else liveSpeechRec.lang = "hi-IN";
+
+          liveSpeechRec.onresult = (event) => {
+            let transcript = "";
+            for (let i = 0; i < event.results.length; ++i) {
+              transcript += event.results[i][0].transcript + " ";
+            }
+            liveRecognizedText = transcript.trim();
+            if (liveRecognizedText) {
+              liveAudioText.textContent = `"${liveRecognizedText}"`;
+              if (isImmersiveMode) {
+                modalAISubtitleText.textContent = `"${liveRecognizedText}"`;
+              }
+            }
+          };
+          liveSpeechRec.start();
+        } catch (e) {
+          console.warn("Live speech recognition init note:", e);
+        }
+      }
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1662,7 +1738,11 @@
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
 
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) {
+            audioChunks.push(e.data);
+          }
+        };
         mediaRecorder.onstop = async () => {
           const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
           sendVoiceAudio(audioBlob);
@@ -1681,11 +1761,17 @@
           modalAISubtitleText.textContent = "Listening to your voice...";
         }
       } catch (err) {
+        if (liveSpeechRec) {
+          try { liveSpeechRec.stop(); } catch(e){}
+        }
         alert("Microphone access denied: " + err.message);
       }
     }
 
     function stopVoiceSession() {
+      if (liveSpeechRec) {
+        try { liveSpeechRec.stop(); } catch(e){}
+      }
       if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
         isRecording = false;
@@ -1712,6 +1798,9 @@
 
       const formData = new FormData();
       formData.append("file", blob, "voice_input.wav");
+      if (liveRecognizedText && liveRecognizedText.trim()) {
+        formData.append("text", liveRecognizedText.trim());
+      }
       formData.append("language_hint", targetHint || "auto");
       formData.append("cross_lingual", "true");
 

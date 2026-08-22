@@ -8,34 +8,21 @@
 
 ---
 
-## 📊 1. MSMARCO-XI Ingestion — All 14 Indic Languages Matrix
+## 📊 1. MSMARCO-XI Ingestion & Streaming Deduplication
 
 ```
-[STREAM] Ingesting Parquet Source: hf://datasets/ai4bharat/MSMARCO-XI (3.7 GB)
-[STREAM] Deduplicating, Filtering & Normalizing Unicode Scripts...
+[STREAM] Ingesting Parquet Source: hf://datasets/microsoft/msmarco-xi (3.7 GB)
+[STREAM] Deduplicating & Normalizing Indic Scripts...
 
-┌────┬────────────┬───────────┬──────────────┬────────────┬──────────────┬─────────────────────────┐
-│ #  │ Language   │ Native    │ ISO / Sarvam │ Script     │ MSMARCO File │ Passages Processed      │
-├────┼────────────┼───────────┼──────────────┼────────────┼──────────────┼─────────────────────────┤
-│ 1  │ Hindi      │ हिन्दी     │ hi (hi-IN)   │ Devanagari │ hin          │ 98,820 Normalized       │
-│ 2  │ Marathi    │ मराठी     │ mr (mr-IN)   │ Devanagari │ mar          │ 98,822 Normalized       │
-│ 3  │ Tamil      │ தமிழ்     │ ta (ta-IN)   │ Tamil      │ tam          │ 98,820 Normalized       │
-│ 4  │ Telugu     │ తెలుగు     │ te (te-IN)   │ Telugu     │ tel          │ 98,820 Normalized       │
-│ 5  │ Bengali    │ বাংলা     │ bn (bn-IN)   │ Bengali    │ ben          │ 98,820 Normalized       │
-│ 6  │ Gujarati   │ ગુજરાતી   │ gu (gu-IN)   │ Gujarati   │ guj          │ 98,820 Normalized       │
-│ 7  │ Kannada    │ ಕನ್ನಡ     │ kn (kn-IN)   │ Kannada    │ kan          │ 98,820 Normalized       │
-│ 8  │ Malayalam  │ മലയാളം    │ ml (ml-IN)   │ Malayalam  │ mal          │ 98,820 Normalized       │
-│ 9  │ Punjabi    │ ਪੰਜਾਬੀ    │ pa (pa-IN)   │ Gurmukhi   │ pan          │ 98,820 Normalized       │
-│ 10 │ Odia       │ ଓଡ଼ିଆ     │ or (od-IN)   │ Odia       │ ori          │ 98,820 Normalized       │
-│ 11 │ Assamese   │ অসমীয়া   │ as (as-IN)   │ Beng-Asm   │ asm          │ 98,820 Normalized       │
-│ 12 │ Nepali     │ नेपाली    │ ne (ne-NP)   │ Devanagari │ nep          │ 98,820 Normalized       │
-│ 13 │ Sanskrit   │ संस्कृतम् │ sa (sa-IN)   │ Devanagari │ san          │ 98,820 Normalized       │
-│ 14 │ Urdu       │ اردو      │ ur (ur-IN)   │ Perso-Arab │ urd          │ 98,820 Normalized       │
-├────┼────────────┼───────────┼──────────────┼────────────┼──────────────┼─────────────────────────┤
-│ +  │ English    │ English   │ en (en-IN)   │ Latin      │ eng          │ 98,820 Normalized       │
-├────┴────────────┴───────────┴──────────────┴────────────┴──────────────┼─────────────────────────┤
-│ TOTAL INDIC + ENGLISH COVERAGE                                         │ 1,383,482 Clean Passages│
-└────────────────────────────────────────────────────────────────────────┴─────────────────────────┘
+┌──────────┬──────────────┬──────────────────┬───────────────┬───────────────────────┐
+│ Language │ Script       │ Raw Ingested     │ Deduplicated  │ Normalized Passages   │
+├──────────┼──────────────┼──────────────────┼───────────────┼───────────────────────┤
+│ English  │ Latin        │ 100,000          │ 98,820        │ 98,820 (100.0%)       │
+│ Hindi    │ Devanagari   │ 100,000          │ 98,820        │ 98,820 (100.0%)       │
+│ Marathi  │ Devanagari   │ 100,000          │ 98,822        │ 98,822 (100.0%)       │
+├──────────┼──────────────┼──────────────────┼───────────────┼───────────────────────┤
+│ TOTAL    │ 3 Languages  │ 300,000          │ 296,462       │ 296,462 Clean Chunks  │
+└──────────┴──────────────┴──────────────────┴───────────────┴───────────────────────┘
 ```
 
 ---
@@ -109,6 +96,6 @@ graph LR
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
-│  ⚡ 14 Indic Languages  │  🚀 HNSW FP16 Index  │  ⏱️ 8.5s Build  │  🔒 100% Local / Zero Cloud │
+│  ⚡ 296k Vectors  │  🚀 HNSW FP16 Index  │  ⏱️ 8.5s Build  │  🔒 100% Local / Zero Cloud │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```

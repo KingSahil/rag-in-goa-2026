@@ -30,16 +30,37 @@ except Exception:
 
 import gradio as gr
 
-# Defensive monkeypatch for Gradio 5.x queueing lock bug
+# Defensive monkeypatch for Gradio 5.x queueing lock bugs (delete_lock and pending_message_lock)
 try:
     import gradio.queueing
     if hasattr(gradio.queueing, "Queue"):
         _orig_queue_init = gradio.queueing.Queue.__init__
         def _patched_queue_init(self, *args, **kwargs):
             _orig_queue_init(self, *args, **kwargs)
-            if not hasattr(self, "pending_message_lock") or self.pending_message_lock is None:
+            if not hasattr(self, "pending_message_lock") or not hasattr(self.pending_message_lock, "__aenter__"):
                 self.pending_message_lock = asyncio.Lock()
+            if not hasattr(self, "delete_lock") or not hasattr(self.delete_lock, "__aenter__"):
+                self.delete_lock = asyncio.Lock()
         gradio.queueing.Queue.__init__ = _patched_queue_init
+
+        _orig_start = gradio.queueing.Queue.start_processing
+        async def _patched_start(self, *args, **kwargs):
+            if not hasattr(self, "delete_lock") or not hasattr(self.delete_lock, "__aenter__"):
+                self.delete_lock = asyncio.Lock()
+            if not hasattr(self, "pending_message_lock") or not hasattr(self.pending_message_lock, "__aenter__"):
+                self.pending_message_lock = asyncio.Lock()
+            return await _orig_start(self, *args, **kwargs)
+        gradio.queueing.Queue.start_processing = _patched_start
+
+        if hasattr(gradio.queueing.Queue, "clean_events"):
+            _orig_clean = gradio.queueing.Queue.clean_events
+            async def _patched_clean(self, *args, **kwargs):
+                if not hasattr(self, "delete_lock") or not hasattr(self.delete_lock, "__aenter__"):
+                    self.delete_lock = asyncio.Lock()
+                if not hasattr(self, "pending_message_lock") or not hasattr(self.pending_message_lock, "__aenter__"):
+                    self.pending_message_lock = asyncio.Lock()
+                return await _orig_clean(self, *args, **kwargs)
+            gradio.queueing.Queue.clean_events = _patched_clean
 except Exception:
     pass
 
@@ -90,9 +111,21 @@ footer, .built-with, gradio-app > footer, .gradio-container > footer { display: 
 @spaces.GPU
 def rag_query_bridge(payload_str: str) -> str:
     """ZeroGPU execution bridge for end-to-end RAG query."""
+    temp_audio_path = None
     try:
         data = json.loads(payload_str)
+        audio_b64 = data.get("audio_base64")
+        if audio_b64:
+            import base64
+            import tempfile
+            audio_bytes = base64.b64decode(audio_b64)
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            tmp.write(audio_bytes)
+            tmp.close()
+            temp_audio_path = tmp.name
+
         req = QueryRequest(
+            audio_path=temp_audio_path,
             text=data.get("text"),
             language_hint=data.get("language_hint"),
             cross_lingual=bool(data.get("cross_lingual", False)),
@@ -108,6 +141,12 @@ def rag_query_bridge(payload_str: str) -> str:
             "answer_source": "declined",
             "guardrail_flags": {"unsafe_detected": False, "off_topic_detected": False},
         })
+    finally:
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+            except Exception:
+                pass
 
 
 @spaces.GPU
