@@ -1,4 +1,4 @@
-gradio>=5.20.0
+gradio>=5.0.0
 fastapi>=0.109.0
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
