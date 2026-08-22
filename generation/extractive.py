@@ -13,13 +13,24 @@ from chunking.metadata import split_sentences_multilingual
 from generation.answer_cache import get_answer_cache
 
 
+def clean_repetitive_text(text: str) -> str:
+    """Removes repetitive phrase/word loops from text."""
+    if not text:
+        return ""
+    # Replace repeated phrase loops
+    cleaned = re.sub(r'(\b.+?\b)(?:\s+\1){2,}', r'\1', text, flags=re.IGNORECASE | re.UNICODE)
+    # Replace repeated single words
+    cleaned = re.sub(r'(\b\w+\b)(?:\s+\1){2,}', r'\1', cleaned, flags=re.IGNORECASE | re.UNICODE)
+    return cleaned.strip()
+
+
 def extract_answer_from_passage(
     query: str, top_passage: Dict[str, Any], target_lang: Optional[str] = None
 ) -> str:
     """
     Extracts the most relevant grounded sentence or full passage as the answer.
     """
-    text = top_passage.get("text", "").strip()
+    text = clean_repetitive_text(top_passage.get("text", "").strip())
     if not text:
         return ""
         
@@ -42,7 +53,7 @@ def extract_answer_from_passage(
             sentences = mr_sents
         
     if len(sentences) <= 2:
-        return " ".join(sentences) if len(sentences) > 0 else text
+        return clean_repetitive_text(" ".join(sentences)) if len(sentences) > 0 else text
         
     # Find sentence with highest token overlap with query
     query_words = set(re.findall(r'\w+', query.lower(), re.UNICODE))
@@ -60,7 +71,7 @@ def extract_answer_from_passage(
     best_idx = sentences.index(best_sent)
     start_i = max(0, best_idx)
     end_i = min(len(sentences), best_idx + 2)
-    return " ".join(sentences[start_i:end_i])
+    return clean_repetitive_text(" ".join(sentences[start_i:end_i]))
 
 
 def synthesize_textrank_svd(

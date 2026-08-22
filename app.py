@@ -223,25 +223,14 @@ def _dummy_zerogpu():
     return True
 
 
-with gr.Blocks(title="🌴 Hacker House Goa 2026 — Voice Indic RAG", css=CUSTOM_CSS, head=HEAD_HTML) as demo:
-    gr.HTML(get_custom_html(), elem_classes=["not-prose"])
-    # Hidden dummy button to ensure ZeroGPU handler registration
-    dummy_btn = gr.Button("zero_gpu_anchor", visible=False)
-    dummy_btn.click(fn=_dummy_zerogpu)
+# Initialize FastAPI application
+fastapi_app = FastAPI(
+    title="Voice-Enabled Indic RAG API",
+    description="Instrumented low-latency Voice RAG pipeline for Indic languages",
+    version="1.0.0",
+)
 
-
-
-# Preload models and perform full pipeline warmup at startup
-print("[Space Startup] Preloading embedding model, FAISS indexes, and warming up pipeline...")
-orchestrator = get_orchestrator()
-orchestrator.warmup_pipeline()
-print("[Space Startup] Full RAG pipeline preloaded and warmed up successfully.")
-
-
-# Attach FastAPI endpoints directly to demo.app
-app = demo.app
-
-app.add_middleware(
+fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -250,18 +239,7 @@ app.add_middleware(
 )
 
 
-@app.get("/app_ui", response_class=HTMLResponse)
-@app.get("/ui", response_class=HTMLResponse)
-async def serve_command_center_ui():
-    """Serves the isolated retro-tropical ChatGPT-style Command Center interface."""
-    demo_file = config.BASE_DIR / "demo" / "index.html"
-    if demo_file.exists():
-        with open(demo_file, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse(content="<h1>Command Center UI Not Found</h1>", status_code=404)
-
-
-@app.get("/health", response_class=JSONResponse)
+@fastapi_app.get("/health", response_class=JSONResponse)
 async def health_check() -> Dict[str, Any]:
     """Health check reporting system and index readiness."""
     index_mgr = get_index_manager()
@@ -279,7 +257,7 @@ async def health_check() -> Dict[str, Any]:
     }
 
 
-@app.get("/languages", response_class=JSONResponse)
+@fastapi_app.get("/languages", response_class=JSONResponse)
 async def get_supported_languages() -> Dict[str, Any]:
     """Returns metadata for all currently configured active languages."""
     lang_details = [
@@ -301,7 +279,7 @@ def _parse_bool(val: Any, default: bool = True) -> bool:
     return bool(val)
 
 
-@app.post("/query", response_model=QueryResponse)
+@fastapi_app.post("/query", response_model=QueryResponse)
 async def query_pipeline(
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
@@ -365,7 +343,7 @@ class TTSRequest(BaseModel):
     pace: float = 1.0
 
 
-@app.post("/tts")
+@fastapi_app.post("/tts")
 async def generate_speech_audio(req: TTSRequest):
     """
     Synthesizes speech audio from text using Sarvam Bulbul TTS.
@@ -383,9 +361,18 @@ async def generate_speech_audio(req: TTSRequest):
         return {"status": "error", "message": str(e)}
 
 
+# Mount Gradio Blocks for UI and ZeroGPU compatibility
+with gr.Blocks(title="🌴 Hacker House Goa 2026 — Voice Indic RAG", css=CUSTOM_CSS, head=HEAD_HTML) as demo:
+    gr.HTML(get_custom_html(), elem_classes=["not-prose"])
+    # Hidden dummy button to ensure ZeroGPU handler registration
+    dummy_btn = gr.Button("zero_gpu_anchor", visible=False)
+    dummy_btn.click(fn=_dummy_zerogpu)
+
+app = gr.mount_gradio_app(fastapi_app, demo, path="/")
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.getenv("PORT", "7860"))
     host = os.getenv("HOST", "0.0.0.0")
     print(f"🌴 Starting Hacker House Goa Command Center UI on http://{host}:{port}")
-    demo.queue().launch(server_name=host, server_port=port)
+    uvicorn.run(app, host=host, port=port)
