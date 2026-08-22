@@ -173,7 +173,7 @@
     }
   </style>
 </head>
-<body class="h-screen w-screen flex bg-tropical-canvas selection:bg-hhgold selection:text-black overflow-hidden font-sans">
+<body class="h-full min-h-screen w-full max-w-full flex bg-tropical-canvas selection:bg-hhgold selection:text-black overflow-hidden font-sans box-border">
 
   <!-- ==================== TOGGLEABLE SIDEBAR (HH GOA BRANDED) ==================== -->
   <aside id="sidebar" class="hidden w-72 bg-hhjungle-950 border-r-2 border-black flex flex-col justify-between p-3.5 z-30 transition-all duration-300 select-none shrink-0 shadow-brutal-lg">
@@ -716,6 +716,26 @@
 
   <!-- ==================== CLIENT INTERACTION JAVASCRIPT ==================== -->
   <script>
+    // Robust dual-path API Fetcher (bypasses SvelteKit proxy on HF Spaces while maintaining local support)
+    async function apiFetch(path, options = {}) {
+      const endpoints = path.startsWith('/api') 
+        ? [path, path.replace('/api', '')] 
+        : ['/api' + path, path];
+      
+      let lastErr = null;
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, options);
+          if (res.status !== 404 && res.status !== 405) {
+            return res;
+          }
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      return await fetch(path, options);
+    }
+
     // State
     let isRecording = false;
     let mediaRecorder = null;
@@ -863,7 +883,7 @@
       formData.append("cross_lingual", crossLingualToggle.checked ? "true" : "false");
 
       try {
-        const res = await fetch("/query", { method: "POST", body: formData });
+        const res = await apiFetch("/query", { method: "POST", body: formData });
         const data = await res.json();
         lastQueryData = data;
         updateAssistantMessage(loadingMsgId, data);
@@ -1218,7 +1238,7 @@
 
       // 1. PRIMARY: Call Sarvam AI Indic Text-To-Speech (Bulbul v2) via /tts
       try {
-        const res = await fetch("/tts", {
+        const res = await apiFetch("/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1566,7 +1586,7 @@
       formData.append("cross_lingual", "true");
 
       try {
-        const res = await fetch("/query", { method: "POST", body: formData });
+        const res = await apiFetch("/query", { method: "POST", body: formData });
         const data = await res.json();
         liveAudioStatus.classList.add("hidden");
         
